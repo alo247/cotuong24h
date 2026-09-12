@@ -198,6 +198,8 @@
     }
   };
 
+  P2PNetwork.prototype.sendData = P2PNetwork.prototype.send;
+
   /**
    * Gửi nước cờ cho đối thủ
    */

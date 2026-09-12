@@ -49,17 +49,6 @@
 
     <!-- PAGE 1: LOBBY VIEW -->
     <section id="viewLobby" class="page-view active">
-      <div class="lobby-hero">
-        <div class="hero-text">
-          <h1>Thi Đấu Cờ Tướng Đỉnh Cao</h1>
-          <p>Nền tảng thi đấu Cờ Tướng trực tuyến chuyên nghiệp. Đặt cược, kết bạn, giao lưu kỳ nghệ mọi lúc mọi nơi!</p>
-          <div class="quick-actions">
-            <button class="btn-action btn-primary" id="btnQuickAI">⚔️ Đánh Với Máy (AI)</button>
-            <button class="btn-action btn-secondary" id="btnCreateRoom">🎲 Tạo Phòng Đặt Cược</button>
-            <button class="btn-action btn-secondary" id="btnJoinRoom">🔗 Nhập Mã Phòng Hẹn Chơi</button>
-          </div>
-        </div>
-      </div>
 
       <h2 style="color: var(--accent-gold); margin-bottom: 1rem;">Lựa Chọn Chế Độ Thi Đấu</h2>
 
@@ -153,6 +142,27 @@
 
     <!-- PAGE 2: GAME BOARD VIEW -->
     <section id="viewGame" class="page-view">
+
+      <!-- KHUNG CHỜ ĐỐI THỦ (hiện khi chờ P2P) -->
+      <div id="waitingRoomOverlay" class="waiting-room-overlay" style="display: none;">
+        <div class="waiting-room-card">
+          <div class="waiting-room-icon">⏳</div>
+          <h2 class="waiting-room-title">Đang Chờ Đối Thủ Kết Nối...</h2>
+          <p class="waiting-room-subtitle" id="waitingRoomName">Phòng của bạn</p>
+          <div class="waiting-room-code-box">
+            <div class="waiting-code-label">Mã Phòng Mời Bạn Bè:</div>
+            <div class="waiting-code-value" id="waitingRoomCode">------</div>
+            <button class="btn-copy-code" id="btnCopyRoomCode" title="Sao chép mã phòng">📋 Copy Mã Phòng</button>
+          </div>
+          <div class="waiting-room-info">
+            <span id="waitingRoomBet">Cược: 0 Xu</span>
+            <span id="waitingRoomTime">Thời gian: 10 phút</span>
+          </div>
+          <p class="waiting-room-hint">Gửi mã phòng trên cho bạn bè để bắt đầu thi đấu!</p>
+          <button class="btn-action btn-resign" id="btnCancelWaiting" style="margin-top: 1rem; width: auto; padding: 0.5rem 1.5rem;">Hủy Phòng & Về Sảnh</button>
+        </div>
+      </div>
+
       <div class="game-layout">
 
         <!-- Left: Xiangqi Board & Players -->
@@ -373,6 +383,10 @@
         <button class="close-btn">&times;</button>
       </div>
       <div class="form-group">
+        <label class="form-label">Tên Phòng</label>
+        <input type="text" id="inputRoomName" class="form-input" placeholder="VD: Bàn Cao Thủ, Phòng Giao Hữu..." maxlength="40">
+      </div>
+      <div class="form-group">
         <label class="form-label">Mức Cược (Xu)</label>
         <select id="selectBetAmount" class="form-input">
           <option value="0">Tự do (Không cược)</option>
@@ -390,7 +404,7 @@
           <option value="900">15 Phút (Chậm)</option>
         </select>
       </div>
-      <button class="btn-action btn-primary" id="btnConfirmCreateRoom" style="width: 100%; justify-content: center;">Tạo Phòng & Lấy Mã Hẹn</button>
+      <button class="btn-action btn-primary" id="btnConfirmCreateRoom" style="width: 100%; justify-content: center;">Tạo Phòng & Vào Chờ Đối Thủ</button>
     </div>
   </div>
 

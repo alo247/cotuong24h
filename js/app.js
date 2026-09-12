@@ -133,7 +133,19 @@ document.addEventListener('DOMContentLoaded', function () {
     statOnlinePlayers: document.getElementById('statOnlinePlayers'),
     btnRefreshRooms: document.getElementById('btnRefreshRooms'),
     inputSearchRoom: document.getElementById('inputSearchRoom'),
-    roomsBrowserGrid: document.getElementById('roomsBrowserGrid')
+    roomsBrowserGrid: document.getElementById('roomsBrowserGrid'),
+
+    // Waiting Room Overlay
+    waitingRoomOverlay: document.getElementById('waitingRoomOverlay'),
+    waitingRoomName: document.getElementById('waitingRoomName'),
+    waitingRoomCode: document.getElementById('waitingRoomCode'),
+    waitingRoomBet: document.getElementById('waitingRoomBet'),
+    waitingRoomTime: document.getElementById('waitingRoomTime'),
+    btnCopyRoomCode: document.getElementById('btnCopyRoomCode'),
+    btnCancelWaiting: document.getElementById('btnCancelWaiting'),
+
+    // Room Name Input
+    inputRoomName: document.getElementById('inputRoomName')
   };
 
   /* ============================================================
@@ -195,6 +207,35 @@ document.addEventListener('DOMContentLoaded', function () {
       toast.classList.remove('show');
       setTimeout(function () { toast.remove(); }, 300);
     }, 3000);
+  }
+
+  /* ================= KHUNG CHỜ ĐỐI THỦ ================= */
+  var _waitingRoomCode = null;
+
+  function showWaitingRoom(code, roomName, betAmount, timeCtrl) {
+    _waitingRoomCode = code;
+    if (dom.waitingRoomOverlay) dom.waitingRoomOverlay.style.display = 'flex';
+    if (dom.waitingRoomCode) dom.waitingRoomCode.textContent = code;
+    if (dom.waitingRoomName) dom.waitingRoomName.textContent = roomName || 'Phòng của bạn';
+    if (dom.waitingRoomBet) {
+      dom.waitingRoomBet.textContent = betAmount > 0
+        ? 'Cược: ' + betAmount.toLocaleString('vi-VN') + ' Xu'
+        : 'Tự do (Không cược)';
+    }
+    if (dom.waitingRoomTime) {
+      var minutes = Math.floor(timeCtrl / 60);
+      dom.waitingRoomTime.textContent = 'Thời gian: ' + minutes + ' phút';
+    }
+
+    // Tự động copy mã phòng vào clipboard
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(code).catch(function () {});
+    }
+  }
+
+  function hideWaitingRoom() {
+    if (dom.waitingRoomOverlay) dom.waitingRoomOverlay.style.display = 'none';
+    _waitingRoomCode = null;
   }
 
   /* ================= THỐNG KÊ BÀN ĐẤU & BROWSER PHÒNG ================= */
@@ -309,6 +350,12 @@ document.addEventListener('DOMContentLoaded', function () {
           renderRoomStatsAndBrowser();
         }
         startNewGame('p2p', targetRoom ? targetRoom.betAmount : 0, 'black');
+        if (currentUser) {
+          p2p.send({
+            type: 'PLAYER_INFO',
+            user: { displayName: currentUser.displayName, elo: currentUser.elo, avatar: currentUser.avatar }
+          });
+        }
       } else {
         // Kết nối P2P thất bại → xóa phòng ma khỏi danh sách
         if (targetRoom) {
@@ -498,6 +545,9 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function startNewGame(mode, bet, color) {
+    // Ẩn khung chờ đối thủ khi game thật sự bắt đầu
+    hideWaitingRoom();
+
     gameMode = mode;
     betAmount = bet || 0;
     myColor = color || 'red';
@@ -819,6 +869,7 @@ document.addEventListener('DOMContentLoaded', function () {
     dom.btnConfirmCreateRoom.onclick = function () {
       var bet = parseInt(dom.selectBetAmount.value, 10);
       timeControl = parseInt(dom.selectTimeControl.value, 10);
+      var roomName = dom.inputRoomName ? dom.inputRoomName.value.trim() : '';
 
       // Kiểm tra số dư trước khi tạo phòng có cược
       if (bet > 0 && currentUser && currentUser.balance < bet) {
@@ -826,14 +877,20 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
+      // Bắt buộc nhập tên phòng
+      if (!roomName) {
+        showToast('Vui lòng nhập tên phòng!', 'error');
+        if (dom.inputRoomName) dom.inputRoomName.focus();
+        return;
+      }
+
       p2p.createRoom(null, function (code) {
         dom.modalCreateRoom.classList.remove('active');
-        showToast('Đã tạo phòng! Mã hẹn chơi: ' + code, 'info');
 
-        // Thêm phòng vào Storage danh sách phòng trực tiếp
+        // Lưu phòng vào Storage
         var newRoom = {
           code: code,
-          name: 'Bàn đấu của ' + (currentUser ? currentUser.displayName : 'Kỳ thủ'),
+          name: roomName,
           hostId: currentUser ? currentUser.id : 'u_guest',
           hostName: currentUser ? currentUser.displayName : 'Kỳ thủ Ẩn danh',
           hostElo: currentUser ? currentUser.elo : 1200,
@@ -849,14 +906,43 @@ document.addEventListener('DOMContentLoaded', function () {
         storage.addOrUpdateRoom(newRoom);
         renderRoomStatsAndBrowser();
 
-        // Copy mã phòng vào clipboard
-        if (navigator.clipboard) {
-          navigator.clipboard.writeText(code).catch(function () {});
-        }
-        prompt('Gửi mã phòng này cho bạn bè để bắt đầu thi đấu:', code);
-        startNewGame('p2p', bet, 'red');
+        // Chuyển sang viewGame và hiện KHUNG CHỜ ĐỐI THỦ (không hiện prompt mã phòng)
+        switchView('Game');
+        showWaitingRoom(code, roomName, bet, timeControl);
+
+        // Reset form
+        if (dom.inputRoomName) dom.inputRoomName.value = '';
       });
     };
+
+    // Nút Copy Mã Phòng trong khung chờ
+    if (dom.btnCopyRoomCode) {
+      dom.btnCopyRoomCode.onclick = function () {
+        var code = dom.waitingRoomCode ? dom.waitingRoomCode.textContent : '';
+        if (code && navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(function () {
+            showToast('Đã copy mã phòng: ' + code, 'info');
+            dom.btnCopyRoomCode.textContent = '✅ Đã Copy!';
+            setTimeout(function () { dom.btnCopyRoomCode.textContent = '📋 Copy Mã Phòng'; }, 2000);
+          }).catch(function () {
+            showToast('Mã phòng: ' + code + ' — hãy copy thủ công!', 'info');
+          });
+        }
+      };
+    }
+
+    // Nút Hủy Phòng & Về Sảnh
+    if (dom.btnCancelWaiting) {
+      dom.btnCancelWaiting.onclick = function () {
+        if (_waitingRoomCode) {
+          storage.removeRoom(_waitingRoomCode);
+          renderRoomStatsAndBrowser();
+        }
+        hideWaitingRoom();
+        switchView('Lobby');
+        showToast('Đã hủy phòng và quay về sảnh chơi.', 'info');
+      };
+    }
 
     // Refresh Room List Button — dọn phòng hết hạn + cập nhật
     if (dom.btnRefreshRooms) {
@@ -974,6 +1060,13 @@ document.addEventListener('DOMContentLoaded', function () {
           if (!confirm('Rời bàn cờ? Trận đấu sẽ bị hủy.')) return;
           stopTimer();
           isGameStarted = false;
+        }
+        hideWaitingRoom();
+        // Xóa phòng nếu đang chờ
+        if (_waitingRoomCode) {
+          storage.removeRoom(_waitingRoomCode);
+          _waitingRoomCode = null;
+          renderRoomStatsAndBrowser();
         }
         switchView('Lobby');
       };
@@ -1160,6 +1253,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // === P2P Event Listeners ===
+    p2p.on('player_joined', function () {
+      // Đối thủ thật kết nối vào phòng của Host
+      hideWaitingRoom();
+      startNewGame('p2p', betAmount, 'red');
+
+      // Gửi thông tin ván cược và người chơi cho khách
+      p2p.send({
+        type: 'GAME_INIT',
+        bet: betAmount,
+        timeControl: timeControl
+      });
+
+      if (currentUser) {
+        p2p.send({
+          type: 'PLAYER_INFO',
+          user: { displayName: currentUser.displayName, elo: currentUser.elo, avatar: currentUser.avatar }
+        });
+      }
+
+      showToast('Đối thủ đã tham gia phòng! Trận đấu bắt đầu.', 'info');
+    });
+
+    p2p.on('opponent_info', function (user) {
+      if (!user) return;
+      if (myColor === 'red') {
+        if (dom.nameBlack) dom.nameBlack.textContent = user.displayName || 'Đối thủ (Đen)';
+        if (dom.eloBlack) dom.eloBlack.textContent = 'ELO: ' + (user.elo || 1200);
+        if (dom.avatarBlack && user.avatar) dom.avatarBlack.textContent = user.avatar;
+      } else {
+        if (dom.nameRed) dom.nameRed.textContent = user.displayName || 'Chủ phòng (Đỏ)';
+        if (dom.eloRed) dom.eloRed.textContent = 'ELO: ' + (user.elo || 1200);
+        if (dom.avatarRed && user.avatar) dom.avatarRed.textContent = user.avatar;
+      }
+    });
+
     p2p.on('opponent_move', function (move) {
       executeMove(move.fromRow, move.fromCol, move.toRow, move.toCol);
     });
