@@ -147,7 +147,16 @@ document.addEventListener('DOMContentLoaded', function () {
     btnRefreshOnlineUsers: document.getElementById('btnRefreshOnlineUsers'),
     countOnlineUsers: document.getElementById('countOnlineUsers'),
     countFriends: document.getElementById('countFriends'),
-    communityGrid: document.getElementById('communityGrid')
+    communityGrid: document.getElementById('communityGrid'),
+
+    // Room Top Banner
+    roomTopBanner: document.getElementById('roomTopBanner'),
+    bannerRoomStatus: document.getElementById('bannerRoomStatus'),
+    bannerRoomTitle: document.getElementById('bannerRoomTitle'),
+    bannerRoomCode: document.getElementById('bannerRoomCode'),
+    btnBannerCopyCode: document.getElementById('btnBannerCopyCode'),
+    btnBannerCopyLink: document.getElementById('btnBannerCopyLink'),
+    bannerRoomBet: document.getElementById('bannerRoomBet')
   };
 
   /* ============================================================
@@ -160,6 +169,25 @@ document.addEventListener('DOMContentLoaded', function () {
     renderOnlineUsersAndCommunity();
     bindEvents();
     checkURLRoom();
+    initRealtimeCloudSync();
+  }
+
+  function initRealtimeCloudSync() {
+    if (window.RealtimeSync) {
+      window.RealtimeSync.init(storage);
+
+      window.RealtimeSync.on('rooms_changed', function () {
+        renderRoomStatsAndBrowser();
+      });
+
+      window.RealtimeSync.on('presence_changed', function () {
+        renderOnlineUsersAndCommunity();
+      });
+
+      window.RealtimeSync.startHeartbeat(function () {
+        return storage.getCurrentUser();
+      });
+    }
   }
 
   function switchView(viewName) {
@@ -262,11 +290,44 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
+  /* ================= THANH THÔNG TIN MÃ PHÒNG TRÊN BÀN CỜ ================= */
+  function showRoomTopBanner(code, roomName, betAmount, isWaiting) {
+    if (!dom.roomTopBanner) return;
+    dom.roomTopBanner.style.display = 'flex';
+    if (dom.bannerRoomCode) dom.bannerRoomCode.textContent = code;
+    if (dom.bannerRoomTitle) dom.bannerRoomTitle.textContent = roomName || 'Bàn Đấu Cờ Tướng';
+    if (dom.bannerRoomBet) {
+      dom.bannerRoomBet.textContent = '💰 Cược: ' + (betAmount > 0 ? betAmount.toLocaleString('vi-VN') + ' Xu' : 'Tự do');
+    }
+    if (dom.bannerRoomStatus) {
+      if (isWaiting) {
+        dom.bannerRoomStatus.textContent = '⏳ ĐANG CHỜ ĐỐI THỦ';
+        dom.bannerRoomStatus.classList.remove('playing');
+      } else {
+        dom.bannerRoomStatus.textContent = '⚔️ ĐANG THI ĐẤU';
+        dom.bannerRoomStatus.classList.add('playing');
+      }
+    }
+  }
+
+  function hideRoomTopBanner() {
+    if (dom.roomTopBanner) dom.roomTopBanner.style.display = 'none';
+  }
+
   /* ================= KỲ THỦ & BẠN BÈ ĐANG ONLINE ================= */
   var currentCommunityTab = 'online';
 
   function renderOnlineUsersAndCommunity() {
     var onlineUsers = storage.getOnlineUsers(currentUser ? currentUser.id : null);
+    // Hợp nhất người chơi online từ Cloud WebSockets giữa các thiết bị
+    if (window.RealtimeSync) {
+      var cloudUsers = window.RealtimeSync.getOnlineUsers(currentUser ? currentUser.id : null);
+      cloudUsers.forEach(function (cu) {
+        if (!onlineUsers.some(function (ou) { return ou.id === cu.id; })) {
+          onlineUsers.push(cu);
+        }
+      });
+    }
     var friends = storage.getFriends(currentUser ? currentUser.id : null);
 
     if (dom.countOnlineUsers) dom.countOnlineUsers.textContent = onlineUsers.length;
@@ -453,6 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
           dom.eloRed.textContent = 'ELO: ' + (targetRoom.hostElo || 1200);
           dom.avatarRed.textContent = targetRoom.hostAvatar || '🐉';
         }
+        showRoomTopBanner(roomCode, targetRoom ? targetRoom.name : 'Bàn Đấu Cờ Tướng', targetRoom ? targetRoom.betAmount : 0, false);
         if (currentUser) {
           p2p.send({
             type: 'PLAYER_INFO',
@@ -1050,12 +1112,55 @@ document.addEventListener('DOMContentLoaded', function () {
         startNewGame('p2p', bet, 'red', true); // isWaiting = true: Chờ đối thủ thật, KHÔNG tạo đối thủ ảo
         dom.lblRoomBet.textContent = 'Cược: ' + (bet > 0 ? bet.toLocaleString('vi-VN') + ' Xu' : 'Tự do') + ' | Mã: ' + code;
         appendSystemRoomNotice(code, roomName, bet, timeControl);
-        showToast('Đã tạo bàn cờ! Mã phòng đã hiển thị trong khung chat bên phải.', 'info');
+        showRoomTopBanner(code, roomName, bet, true);
+
+        // Phát sóng phòng mới tới tất cả các thiết bị khác qua Realtime Cloud Sync
+        if (window.RealtimeSync) {
+          window.RealtimeSync.broadcastRoomCreated(newRoom);
+        }
+
+        showToast('Đã tạo bàn cờ! Mã phòng: ' + code, 'info');
 
         // Reset form
         if (dom.inputRoomName) dom.inputRoomName.value = '';
       });
     };
+
+    // Sự kiện nút Copy Mã và Copy Link trên Room Top Banner
+    if (dom.btnBannerCopyCode) {
+      dom.btnBannerCopyCode.onclick = function () {
+        var code = (dom.bannerRoomCode ? dom.bannerRoomCode.textContent : _currentHostRoomCode) || '';
+        if (code && navigator.clipboard) {
+          navigator.clipboard.writeText(code).then(function () {
+            dom.btnBannerCopyCode.textContent = '✅ Đã Copy!';
+            showToast('Đã sao chép mã phòng: ' + code, 'info');
+            setTimeout(function () { dom.btnBannerCopyCode.textContent = '📋 Sao Chép Mã'; }, 2000);
+          }).catch(function () {
+            showToast('Mã phòng: ' + code, 'info');
+          });
+        }
+      };
+    }
+
+    if (dom.btnBannerCopyLink) {
+      dom.btnBannerCopyLink.onclick = function () {
+        var code = (dom.bannerRoomCode ? dom.bannerRoomCode.textContent : _currentHostRoomCode) || '';
+        if (code) {
+          var url = window.location.origin + window.location.pathname + '#room=' + code;
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function () {
+              dom.btnBannerCopyLink.textContent = '✅ Đã Copy Link!';
+              showToast('Đã sao chép link mời bạn bè vào thẳng bàn cờ!', 'info');
+              setTimeout(function () { dom.btnBannerCopyLink.textContent = '🔗 Copy Link Mời'; }, 2000);
+            }).catch(function () {
+              prompt('Link mời vào phòng của bạn:', url);
+            });
+          } else {
+            prompt('Link mời vào phòng của bạn:', url);
+          }
+        }
+      };
+    }
 
     // Refresh Room List Button — dọn phòng hết hạn + cập nhật
     if (dom.btnRefreshRooms) {
@@ -1215,10 +1320,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         // Xóa phòng nếu đang chờ đối thủ mà chủ phòng rời về sảnh
         if (_currentHostRoomCode) {
+          if (window.RealtimeSync) {
+            window.RealtimeSync.broadcastRoomClosed(_currentHostRoomCode);
+          }
           storage.removeRoom(_currentHostRoomCode);
           _currentHostRoomCode = null;
           renderRoomStatsAndBrowser();
         }
+        hideRoomTopBanner();
         switchView('Lobby');
       };
     }
@@ -1407,6 +1516,17 @@ document.addEventListener('DOMContentLoaded', function () {
     p2p.on('player_joined', function () {
       // Đối thủ thật kết nối vào phòng của Host: Khởi động ván đấu thật
       startNewGame('p2p', betAmount, 'red', false);
+
+      if (window.RealtimeSync && _currentHostRoomCode) {
+        var rooms = storage.getRooms();
+        var rm = rooms.find(function (r) { return r.code === _currentHostRoomCode; });
+        if (rm) {
+          rm.status = 'playing';
+          storage.addOrUpdateRoom(rm);
+          window.RealtimeSync.broadcastRoomUpdated(rm);
+        }
+      }
+      showRoomTopBanner(_currentHostRoomCode, (dom.bannerRoomTitle ? dom.bannerRoomTitle.textContent : 'Bàn Đấu Cờ Tướng'), betAmount, false);
 
       // Gửi thông tin ván cược và người chơi cho khách
       p2p.send({

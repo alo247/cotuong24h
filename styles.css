@@ -1477,3 +1477,150 @@ body {
   border: 1px dashed var(--border-color);
 }
 
+/* ================= ROOM TOP BANNER (THANH THÔNG TIN MÃ PHÒNG TRÊN BÀN CỜ) ================= */
+.room-top-banner {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border: 2px solid var(--accent-gold);
+  border-radius: 0.85rem;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 25px rgba(245, 158, 11, 0.25), 0 0 15px rgba(245, 158, 11, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.room-banner-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.room-banner-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold);
+  padding: 0.2rem 0.6rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+
+.room-banner-status-badge.playing {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.room-banner-title-text {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--text-main);
+}
+
+.room-banner-center {
+  display: flex;
+  align-items: center;
+}
+
+.room-code-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--bg-primary);
+  border: 2px dashed var(--accent-gold);
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.85rem;
+  flex-wrap: wrap;
+}
+
+.pill-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pill-code {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--accent-gold);
+  letter-spacing: 3px;
+  font-family: 'Courier New', monospace;
+  user-select: all;
+}
+
+.btn-banner-action {
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-copy-code-pill {
+  background: var(--accent-gold);
+  color: #1a1a2e;
+}
+
+.btn-copy-code-pill:hover {
+  filter: brightness(1.1);
+  transform: scale(1.03);
+}
+
+.btn-copy-link-pill {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+}
+
+.btn-copy-link-pill:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: scale(1.03);
+}
+
+.room-banner-right {
+  display: flex;
+  align-items: center;
+}
+
+.room-banner-meta {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  background: var(--bg-secondary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .room-top-banner {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .room-banner-main {
+    align-items: center;
+  }
+  .room-banner-center {
+    justify-content: center;
+  }
+  .room-code-pill {
+    justify-content: center;
+    width: 100%;
+  }
+  .room-banner-right {
+    justify-content: center;
+  }
+}
+

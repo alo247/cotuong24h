@@ -10,6 +10,10 @@
 
   <!-- PeerJS WebRTC P2P Library (Loaded asynchronously with defer so network blocks/delays never break CSS rendering) -->
   <script defer src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- MQTT WebSockets Library for Serverless Multi-Device Realtime Sync -->
+  <script defer src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+  <script defer src="js/realtime-sync.js"></script>
 </head>
 <body>
 
@@ -60,9 +64,9 @@
         </div>
 
         <div class="mode-card" id="cardP2P">
-          <div class="mode-icon">🌐</div>
-          <div class="mode-title">Đấu Online P2P (WebRTC)</div>
-          <div class="mode-desc">Thi đấu thời gian thực với kỳ thủ khác qua Internet. Kết nối P2P trực tiếp cực kỳ nhanh và mượt!</div>
+          <div class="mode-icon">🔑</div>
+          <div class="mode-title">Nhập Mã Phòng</div>
+          <div class="mode-desc">Nhập mã phòng do bạn bè hoặc chủ bàn chia sẻ để vào thi đấu trực tiếp ngay lập tức.</div>
         </div>
 
         <div class="mode-card" id="cardBetRoom">
@@ -159,6 +163,28 @@
 
     <!-- PAGE 2: GAME BOARD VIEW -->
     <section id="viewGame" class="page-view">
+
+      <!-- THANH THÔNG TIN MÃ PHÒNG VÀ MỜI BẠN BÈ (TRÊN ĐẦU BÀN CỜ) -->
+      <div class="room-top-banner" id="roomTopBanner" style="display: none;">
+        <div class="room-banner-main">
+          <div class="room-banner-status-badge" id="bannerRoomStatus">⏳ ĐANG CHỜ ĐỐI THỦ</div>
+          <div class="room-banner-title-text" id="bannerRoomTitle">Bàn Đấu Cờ Tướng</div>
+        </div>
+
+        <div class="room-banner-center">
+          <div class="room-code-pill">
+            <span class="pill-label">MÃ PHÒNG:</span>
+            <span class="pill-code" id="bannerRoomCode">------</span>
+            <button class="btn-banner-action btn-copy-code-pill" id="btnBannerCopyCode" title="Sao chép mã phòng">📋 Sao Chép Mã</button>
+            <button class="btn-banner-action btn-copy-link-pill" id="btnBannerCopyLink" title="Sao chép link mời bạn bè">🔗 Copy Link Mời</button>
+          </div>
+        </div>
+
+        <div class="room-banner-right">
+          <span class="room-banner-meta" id="bannerRoomBet">💰 Cược: 0 Xu</span>
+        </div>
+      </div>
+
       <div class="game-layout">
 
         <!-- Left: Xiangqi Board & Players -->
