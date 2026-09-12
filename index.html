@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cờ Tướng Online Pro - Thi Đấu Chuyên Nghiệp</title>
+
+  <!-- PeerJS WebRTC P2P Library for Zero-Server Realtime Online Multiplayer -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar Navigation -->
+  <nav class="navbar">
+    <div class="brand" id="btnGoHome">
+      <div class="brand-icon">楚</div>
+      <span class="brand-title">CỜ TƯỚNG ONLINE</span>
+    </div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="nav-hamburger" id="navMenuToggle" aria-label="Menu">☰</button>
+
+    <div class="nav-menu">
+      <button class="nav-btn" id="navLobby">🎮 Sảnh Chơi</button>
+      <button class="nav-btn" id="navLeaderboard">🏆 Xếp Hạng</button>
+      <button class="nav-btn btn-gold" id="navDeposit">💰 Nạp Xu</button>
+      <button class="nav-btn" id="navAdmin" style="display: none;">👑 Admin</button>
+
+      <!-- User Profile Badge / Auth Buttons -->
+      <div id="authSection">
+        <button class="nav-btn btn-primary" id="btnOpenLogin">Đăng Nhập</button>
+      </div>
+      <div id="userBadge" class="user-badge" style="display: none;">
+        <span class="user-avatar" id="lblUserAvatar">🐉</span>
+        <div class="user-info">
+          <span class="user-name" id="lblUserName">Kỳ Thủ</span>
+          <span class="user-balance" id="lblUserBalance">0 Xu</span>
+        </div>
+        <button class="nav-btn" id="btnLogout" title="Đăng xuất" style="padding: 0.2rem 0.5rem; margin-left: 0.4rem;">🚪</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Application Container -->
+  <main class="main-container">
+
+    <!-- PAGE 1: LOBBY VIEW -->
+    <section id="viewLobby" class="page-view active">
+      <div class="lobby-hero">
+        <div class="hero-text">
+          <h1>Thi Đấu Cờ Tướng Đỉnh Cao</h1>
+          <p>Nền tảng thi đấu Cờ Tướng trực tuyến chuyên nghiệp. Đặt cược, kết bạn, giao lưu kỳ nghệ mọi lúc mọi nơi!</p>
+          <div class="quick-actions">
+            <button class="btn-action btn-primary" id="btnQuickAI">⚔️ Đánh Với Máy (AI)</button>
+            <button class="btn-action btn-secondary" id="btnCreateRoom">🎲 Tạo Phòng Đặt Cược</button>
+            <button class="btn-action btn-secondary" id="btnJoinRoom">🔗 Nhập Mã Phòng Hẹn Chơi</button>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="color: var(--accent-gold); margin-bottom: 1rem;">Lựa Chọn Chế Độ Thi Đấu</h2>
+
+      <div class="modes-grid">
+        <div class="mode-card" id="cardVsAI">
+          <div class="mode-icon">🤖</div>
+          <div class="mode-title">Chơi Với Máy (AI Pro)</div>
+          <div class="mode-desc">Luyện tập kỳ nghệ với 4 cấp độ từ Tập chơi đến Kiện tướng quốc gia. Có tính năng hoãn nước đi.</div>
+        </div>
+
+        <div class="mode-card" id="cardP2P">
+          <div class="mode-icon">🌐</div>
+          <div class="mode-title">Đấu Online P2P (WebRTC)</div>
+          <div class="mode-desc">Thi đấu thời gian thực với kỳ thủ khác qua Internet. Kết nối P2P trực tiếp cực kỳ nhanh và mượt!</div>
+        </div>
+
+        <div class="mode-card" id="cardBetRoom">
+          <div class="mode-icon">💸</div>
+          <div class="mode-title">Phòng Thi Đấu Đặt Cược</div>
+          <div class="mode-desc">Đặt cược Xu trước trận đấu (10k, 50k, 100k, 500k Xu). Thắng cược nhận Xu và tăng điểm ELO!</div>
+        </div>
+
+        <div class="mode-card" id="cardPassPlay">
+          <div class="mode-icon">👥</div>
+          <div class="mode-title">Đánh 2 Người (Cùng Máy)</div>
+          <div class="mode-desc">Chơi 2 người trực tiếp trên cùng một điện thoại, máy tính bảng hoặc laptop. Hẹn gặp mặt giao hữu.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- PAGE 2: GAME BOARD VIEW -->
+    <section id="viewGame" class="page-view">
+      <div class="game-layout">
+
+        <!-- Left: Xiangqi Board & Players -->
+        <div class="board-container">
+
+          <!-- Top Player (Black) -->
+          <div class="player-card" id="cardPlayerBlack">
+            <div class="player-detail">
+              <div class="player-avatar" id="avatarBlack">🐯</div>
+              <div>
+                <div class="player-name" id="nameBlack">Đối thủ (Đen)</div>
+                <div class="player-elo" id="eloBlack">ELO: 1200</div>
+              </div>
+            </div>
+            <div class="player-timer" id="timerBlack">10:00</div>
+          </div>
+
+          <!-- BÀN CỜ TƯỚNG 3D SANG TRỌNG -->
+          <div class="board-frame-outer">
+            <div class="corner-ornament top-left"></div>
+            <div class="corner-ornament top-right"></div>
+            <div class="corner-ornament bottom-left"></div>
+            <div class="corner-ornament bottom-right"></div>
+
+            <div class="xiangqi-board" id="board">
+              <svg class="board-svg-grid" viewBox="0 0 900 1000" preserveAspectRatio="none">
+                <rect x="35" y="35" width="830" height="930" fill="none" stroke="#4a2e1b" stroke-width="4"/>
+                <rect x="45" y="45" width="810" height="910" fill="none" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="50" x2="50" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="850" y1="50" x2="850" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="150" y1="50" x2="150" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="150" y1="550" x2="150" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="250" y1="50" x2="250" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="250" y1="550" x2="250" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="350" y1="50" x2="350" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="350" y1="550" x2="350" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="450" y1="50" x2="450" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="450" y1="550" x2="450" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="550" y1="50" x2="550" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="550" y1="550" x2="550" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="650" y1="50" x2="650" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="650" y1="550" x2="650" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="750" y1="50" x2="750" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="750" y1="550" x2="750" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="50" x2="850" y2="50" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="150" x2="850" y2="150" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="250" x2="850" y2="250" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="350" x2="850" y2="350" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="450" x2="850" y2="450" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="550" x2="850" y2="550" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="650" x2="850" y2="650" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="750" x2="850" y2="750" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="850" x2="850" y2="850" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="50" y1="950" x2="850" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="350" y1="50" x2="550" y2="250" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="550" y1="50" x2="350" y2="250" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="350" y1="750" x2="550" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <line x1="550" y1="750" x2="350" y2="950" stroke="#5c3a21" stroke-width="2"/>
+                <text x="230" y="515" font-family="'KaiTi', '楷体', serif" font-size="44" font-weight="bold" fill="#7a5230" text-anchor="middle" opacity="0.85">楚 河</text>
+                <text x="670" y="515" font-family="'KaiTi', '楷体', serif" font-size="44" font-weight="bold" fill="#7a5230" text-anchor="middle" opacity="0.85">漢 界</text>
+              </svg>
+              <div class="piece-layer" id="pieceLayer"></div>
+            </div>
+          </div>
+
+          <!-- Bottom Player (Red) -->
+          <div class="player-card" id="cardPlayerRed">
+            <div class="player-detail">
+              <div class="player-avatar" id="avatarRed">🐉</div>
+              <div>
+                <div class="player-name" id="nameRed">Bạn (Đỏ)</div>
+                <div class="player-elo" id="eloRed">ELO: 1200</div>
+              </div>
+            </div>
+            <div class="player-timer" id="timerRed">10:00</div>
+          </div>
+
+          <!-- Quick Game Control Buttons -->
+          <div class="game-controls">
+            <button class="nav-btn" id="btnFlipBoard">🔄 Lật Bàn</button>
+            <button class="nav-btn" id="btnUndo">↩️ Hoãn Nước</button>
+            <button class="nav-btn" id="btnOfferDraw">🤝 Xin Hòa</button>
+            <button class="nav-btn btn-resign" id="btnResign">🏳️ Đầu Hàng</button>
+            <button class="nav-btn" id="btnBackToLobby">🏠 Về Sảnh</button>
+          </div>
+
+        </div>
+
+        <!-- Right: Game History Log & Room Chat -->
+        <div class="game-side-panel">
+          <div class="panel-section">
+            <div class="section-title">
+              <span>📋 Biên Bản Nước Đi</span>
+              <span id="lblRoomBet" style="color: var(--accent-gold);">Cược: 0 Xu</span>
+            </div>
+            <div class="moves-log" id="movesLog"></div>
+          </div>
+
+          <div class="panel-section" style="flex: 1;">
+            <div class="section-title">💬 Trò Chuyện Trận Đấu</div>
+            <div class="chat-messages" id="chatLog"></div>
+            <div class="chat-input-box">
+              <input type="text" id="txtChatInput" class="chat-input" placeholder="Nhập tin nhắn..." maxlength="100">
+              <button class="nav-btn btn-primary" id="btnSendChat">Gửi</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- PAGE 3: BẢNG XẾP HẠNG -->
+    <section id="viewLeaderboard" class="page-view">
+      <h2 style="color: var(--accent-gold); margin-bottom: 1rem;">🏆 Bảng Xếp Hạng Kỳ Thủ Cao Thủ</h2>
+      <div class="data-table-container" style="background: var(--bg-secondary); border-radius: 1rem; padding: 1rem; border: 1px solid var(--border-color);">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Hạng</th>
+              <th>Kỳ Thủ</th>
+              <th>Điểm ELO</th>
+              <th>Thắng / Thua / Hòa</th>
+              <th>Số Dư Xu</th>
+            </tr>
+          </thead>
+          <tbody id="tblLeaderboard"></tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- PAGE 4: ADMIN PANEL -->
+    <section id="viewAdmin" class="page-view">
+      <h2 style="color: var(--accent-gold); margin-bottom: 1rem;">👑 Hệ Thống Quản Trị Admin</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem;">
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Tổng Thành Viên</div>
+          <div id="statTotalUsers" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-gold);">0</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem;">
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Tổng Số Trận Đã Đấu</div>
+          <div id="statTotalGames" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-green);">0</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem;">
+          <div style="color: var(--text-muted); font-size: 0.85rem;">Tổng Xu Toàn Hệ Thống</div>
+          <div id="statTotalCoins" style="font-size: 1.5rem; font-weight: 700; color: var(--accent-blue);">0</div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        <span style="font-weight: 600;">💾 Quản Lý Dữ Liệu Hệ Thống:</span>
+        <button class="nav-btn" id="btnAdminExport">📥 Export Backup (JSON)</button>
+        <button class="nav-btn" id="btnAdminImport">📤 Import Backup (JSON)</button>
+        <input type="file" id="fileImportJson" accept=".json" style="display: none;">
+      </div>
+
+      <h3 style="margin-bottom: 0.75rem; color: var(--text-main);">Danh Sách Thành Viên & Quản Lý Số Dư</h3>
+      <div class="data-table-container" style="background: var(--bg-secondary); border-radius: 1rem; padding: 1rem; border: 1px solid var(--border-color); overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID / Username</th>
+              <th>Tên Hiển Thị</th>
+              <th>ELO</th>
+              <th>Số Dư (Xu)</th>
+              <th>Trạng Thái</th>
+              <th>Thao Tác Admin</th>
+            </tr>
+          </thead>
+          <tbody id="tblAdminUsers"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. LOGIN / REGISTER MODAL -->
+  <div class="modal-overlay" id="modalAuth">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="authTitle">Đăng Nhập Thành Viên</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <form id="formAuth">
+        <div class="form-group">
+          <label class="form-label">Tên Đăng Nhập</label>
+          <input type="text" id="authUsername" class="form-input" placeholder="Ví dụ: kythu_pro" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mật Khẩu</label>
+          <input type="password" id="authPassword" class="form-input" placeholder="Mật khẩu của bạn" required>
+        </div>
+        <div class="form-group" id="groupDisplayName" style="display: none;">
+          <label class="form-label">Tên Hiển Thị</label>
+          <input type="text" id="authDisplayName" class="form-input" placeholder="Tên hiển thị trong game">
+        </div>
+
+        <button type="submit" id="btnAuthSubmit" class="btn-action btn-primary" style="width: 100%; justify-content: center; margin-top: 1rem;">Xác Nhận</button>
+      </form>
+      <div style="margin-top: 1rem; text-align: center; font-size: 0.85rem;">
+        <span id="lblAuthToggleText">Chưa có tài khoản?</span>
+        <a href="#" id="btnToggleAuth" style="color: var(--accent-gold); font-weight: 700; text-decoration: none;">Đăng ký ngay (Tặng 100k Xu)</a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 2. CREATE ROOM MODAL -->
+  <div class="modal-overlay" id="modalCreateRoom">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">🎲 Tạo Phòng Thi Đấu</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mức Cược (Xu)</label>
+        <select id="selectBetAmount" class="form-input">
+          <option value="0">Tự do (Không cược)</option>
+          <option value="10000">10,000 Xu</option>
+          <option value="50000">50,000 Xu</option>
+          <option value="100000">100,000 Xu</option>
+          <option value="500000">500,000 Xu</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Thời Gian Mỗi Bên</label>
+        <select id="selectTimeControl" class="form-input">
+          <option value="300">5 Phút (Nhanh)</option>
+          <option value="600" selected>10 Phút (Tiêu chuẩn)</option>
+          <option value="900">15 Phút (Chậm)</option>
+        </select>
+      </div>
+      <button class="btn-action btn-primary" id="btnConfirmCreateRoom" style="width: 100%; justify-content: center;">Tạo Phòng & Lấy Mã Hẹn</button>
+    </div>
+  </div>
+
+
+  <!-- 3. VIETQR DEPOSIT MODAL -->
+  <div class="modal-overlay" id="modalDeposit">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">💰 Nạp Xu Thi Đấu</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Nạp Xu qua quét mã QR MoMo / VietQR. Tỷ lệ quy đổi: 1,000 VNĐ = 10,000 Xu.</p>
+
+      <div class="form-group">
+        <label class="form-label">Chọn Gói Nạp</label>
+        <select id="selectDepositPackage" class="form-input">
+          <option value="20000">Gói 20,000 VNĐ (Nhận 200,000 Xu)</option>
+          <option value="50000">Gói 50,000 VNĐ (Nhận 500,000 Xu + 50k Tặng)</option>
+          <option value="100000">Gói 100,000 VNĐ (Nhận 1,000,000 Xu + 200k Tặng)</option>
+          <option value="500000">Gói VIP 500,000 VNĐ (Nhận 5,500,000 Xu)</option>
+        </select>
+      </div>
+
+      <div style="text-align: center; margin: 1rem 0; background: #fff; padding: 1rem; border-radius: 0.5rem;">
+        <img id="imgDepositQR" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MoMo_NapXu_CoTuong" alt="QR Nạp Tiền" style="width: 180px; height: 180px;">
+        <div style="color: #000; font-weight: 700; font-size: 0.85rem; margin-top: 0.5rem;">Quét Mã QR Chuyển Khoản</div>
+      </div>
+
+      <button class="btn-action btn-primary" id="btnConfirmDeposit" style="width: 100%; justify-content: center;">Xác Nhận Đã Chuyển Khoản (Nạp Ngay)</button>
+    </div>
+  </div>
+
+
+  <!-- 4. ADMIN TOPUP USER MODAL -->
+  <div class="modal-overlay" id="modalAdminTopup">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">💵 Nạp/Trừ Xu Thành Viên</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <input type="hidden" id="adminTopupUserId">
+      <div class="form-group">
+        <label class="form-label">Số Tiền Xu (Nhập số âm để trừ)</label>
+        <input type="number" id="adminTopupAmount" class="form-input" placeholder="Ví dụ: 100000" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ghi Chú</label>
+        <input type="text" id="adminTopupNote" class="form-input" placeholder="Ví dụ: Thưởng giải đấu cờ tướng">
+      </div>
+      <button class="btn-action btn-primary" id="btnSubmitAdminTopup" style="width: 100%; justify-content: center;">Cập Nhật Số Dư</button>
+    </div>
+  </div>
+
+
+  <!-- 5. AI DIFFICULTY SELECTOR MODAL (MỚI) -->
+  <div class="modal-overlay" id="modalAIDifficulty">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">🤖 Chọn Cấp Độ AI</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">Chọn cấp độ AI phù hợp với trình độ của bạn:</p>
+      <div class="ai-levels-grid">
+        <button class="btn-ai-level" data-level="1">
+          <div class="ai-level-icon">🌱</div>
+          <div class="ai-level-name">Tập Chơi</div>
+          <div class="ai-level-desc">Dành cho người mới bắt đầu</div>
+        </button>
+        <button class="btn-ai-level" data-level="2">
+          <div class="ai-level-icon">⚔️</div>
+          <div class="ai-level-name">Trung Bình</div>
+          <div class="ai-level-desc">Có chiến thuật cơ bản</div>
+        </button>
+        <button class="btn-ai-level" data-level="3">
+          <div class="ai-level-icon">🔥</div>
+          <div class="ai-level-name">Khá</div>
+          <div class="ai-level-desc">Tư duy sâu, thách thức</div>
+        </button>
+        <button class="btn-ai-level" data-level="4">
+          <div class="ai-level-icon">👑</div>
+          <div class="ai-level-name">Kiện Tướng</div>
+          <div class="ai-level-desc">Siêu mạnh, cấp chuyên nghiệp</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 6. GAME OVER RESULT MODAL (MỚI) -->
+  <div class="modal-overlay" id="modalGameOver">
+    <div class="modal-content" style="text-align: center;">
+      <div class="modal-header" style="justify-content: center;">
+        <div class="modal-title" id="gameOverTitle" style="font-size: 1.5rem;">🏆 Kết Quả</div>
+      </div>
+      <p id="gameOverMessage" style="color: var(--text-muted); margin-bottom: 0.5rem;"></p>
+      <p id="gameOverElo" style="color: var(--accent-gold); font-weight: 700; font-size: 1.2rem; margin-bottom: 1.5rem;"></p>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button class="btn-action btn-primary" id="btnPlayAgain">🔄 Chơi Lại</button>
+        <button class="btn-action btn-secondary" id="btnBackLobby">🏠 Về Sảnh Chơi</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Core Application Scripts -->
+  <script src="js/game-engine.js"></script>
+  <script src="js/ai-engine.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/p2p-network.js"></script>
+  <script src="js/sound-manager.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

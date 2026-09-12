@@ -1,0 +1,922 @@
+/* ============================================================
+   CỜ TƯỚNG ONLINE PRO - CSS STYLESHEET
+   Giao diện Sang Trọng, 3D Chân Thực, Tối Ưu Mobile & Desktop
+   ============================================================ */
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #2d3748;
+  --bg-hover: #3a475d;
+  --accent-gold: #f59e0b;
+  --accent-gold-hover: #d97706;
+  --accent-red: #ef4444;
+  --accent-red-hover: #dc2626;
+  --accent-green: #10b981;
+  --accent-blue: #3b82f6;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-color: #475569;
+
+  --board-bg-start: #eed49f;
+  --board-bg-end: #d19a4e;
+  --board-line-color: #5c3a21;
+  --piece-red-text: #b91c1c;
+  --piece-black-text: #0f172a;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  --font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* ================= Header Navbar ================= */
+.navbar {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  cursor: pointer;
+}
+
+.brand-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-btn {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.nav-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.nav-btn.btn-gold {
+  background: linear-gradient(135deg, var(--accent-gold), #d97706);
+  color: #000;
+  border: none;
+}
+
+.nav-btn.btn-gold:hover {
+  opacity: 0.9;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-card);
+  padding: 0.4rem 0.8rem;
+  border-radius: 2rem;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.user-avatar {
+  font-size: 1.3rem;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.user-balance {
+  font-size: 0.8rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+/* ================= Container Layout ================= */
+.main-container {
+  flex: 1;
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.page-view {
+  display: none;
+}
+
+.page-view.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================= Hero / Lobby View ================= */
+.lobby-hero {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 1rem;
+  padding: 2rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.hero-text h1 {
+  font-size: 2rem;
+  color: var(--accent-gold);
+  margin-bottom: 0.5rem;
+}
+
+.hero-text p {
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+}
+
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.btn-action {
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 0.6rem;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #0f172a;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-gold);
+}
+
+.modes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.mode-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mode-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent-gold);
+  box-shadow: var(--shadow-lg);
+}
+
+.mode-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 0.75rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+}
+
+.mode-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.mode-desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* ================= BÀN CỜ TƯỚNG 3D REALISTIC (BOARD VIEW) ================= */
+.game-layout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.board-container {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.player-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.player-card.active-turn {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.player-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.player-avatar {
+  font-size: 1.8rem;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-name {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.player-elo {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.player-timer {
+  background: var(--bg-primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  font-family: monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  border: 1px solid var(--border-color);
+}
+
+/* KHUNG GỖ CỰC SANG TRỌNG CÓ TRÁT KIM GÓC */
+.board-frame-outer {
+  width: 100%;
+  max-width: 560px;
+  background: linear-gradient(135deg, #3d2314 0%, #271408 50%, #422513 100%);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8),
+              inset 0 2px 4px rgba(255, 255, 255, 0.2),
+              inset 0 -4px 8px rgba(0, 0, 0, 0.6);
+  margin: 0.5rem 0;
+}
+
+/* 4 GÓC TRÁT KIM ORNAMENT */
+.corner-ornament {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border: 3px solid #f59e0b;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.corner-ornament.top-left {
+  top: 8px; left: 8px;
+  border-right: none; border-bottom: none;
+}
+.corner-ornament.top-right {
+  top: 8px; right: 8px;
+  border-left: none; border-bottom: none;
+}
+.corner-ornament.bottom-left {
+  bottom: 8px; left: 8px;
+  border-right: none; border-top: none;
+}
+.corner-ornament.bottom-right {
+  bottom: 8px; right: 8px;
+  border-left: none; border-top: none;
+}
+
+/* BÀN CỜ GỖ TỰ NHIÊN */
+.xiangqi-board {
+  width: 100%;
+  aspect-ratio: 9 / 10;
+  background: radial-gradient(circle, #f3d49b 0%, #db9d53 70%, #be8336 100%);
+  border: 3px solid #5c3a21;
+  border-radius: 4px;
+  box-shadow: inset 0 0 20px rgba(74, 46, 27, 0.6);
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.board-svg-grid {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+.piece-layer {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  display: grid;
+  grid-template-rows: repeat(10, 1fr);
+  grid-template-columns: repeat(9, 1fr);
+}
+
+.square {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* QUÂN CỜ 3D CHÂN THỰC VỜI KHẮC NỔI */
+.piece {
+  width: 86%;
+  height: 86%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: clamp(1.1rem, 4.5vw, 1.8rem);
+  font-family: 'KaiTi', '楷体', 'STKaiti', serif;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10;
+  position: relative;
+}
+
+/* QUÂN ĐỎ (RED PIECE) - Gỗ Sáng/Ngà Voi Chữ Đỏ Sang Trọng */
+.piece.red {
+  background: radial-gradient(circle at 35% 35%, #ffffff 0%, #fef3c7 60%, #e2e8f0 100%);
+  color: #b91c1c;
+  border: 3px solid #b91c1c;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.45),
+              inset 0 3px 5px rgba(255, 255, 255, 0.9),
+              inset 0 -4px 6px rgba(185, 28, 28, 0.25);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* QUÂN ĐEN (BLACK PIECE) - Gỗ Đen Mun / Đá Đen Huyền Bí */
+.piece.black {
+  background: radial-gradient(circle at 35% 35%, #334155 0%, #1e293b 60%, #0f172a 100%);
+  color: #f8fafc;
+  border: 3px solid #475569;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.6),
+              inset 0 3px 5px rgba(255, 255, 255, 0.3),
+              inset 0 -4px 6px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* QUÂN ĐƯỢC CHỌN - TẠO KHUNG KHUNG VUÔNG KHUYÊN NỔI BẬT (TARGET SELECTION BRACKET) */
+.piece.selected {
+  transform: scale(1.15) translateY(-3px);
+  z-index: 25;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5), 0 0 15px var(--accent-gold);
+}
+
+.piece.selected::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 3px dashed var(--accent-gold);
+  border-radius: 50%;
+  animation: rotateBorder 6s linear infinite;
+}
+
+@keyframes rotateBorder {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ĐIỂM GỢI Ý NƯỚC ĐI HỢP LỆ (GLOWING GREEN DOT) */
+.valid-dot {
+  position: absolute;
+  width: 28%;
+  height: 28%;
+  background: radial-gradient(circle, #10b981 30%, #059669 100%);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 12px #10b981;
+  z-index: 15;
+  animation: pulseDot 1.2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0.7; }
+}
+
+/* ĐIỂM NƯỚC ĐI VỪA MỚI ĐÃ CHẠY (LAST MOVE HIGHLIGHT) */
+.last-move-highlight {
+  position: absolute;
+  inset: 6%;
+  border: 3px solid var(--accent-gold);
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 12px var(--accent-gold);
+  z-index: 5;
+}
+
+/* SIDE PANEL (CHAT & MOVES) */
+.game-side-panel {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+
+.panel-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.moves-log {
+  height: 160px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.move-row {
+  display: grid;
+  grid-template-columns: 35px 1fr 1fr;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+}
+
+.move-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.chat-messages {
+  height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding-right: 0.25rem;
+}
+
+.chat-msg {
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--bg-hover);
+  max-width: 90%;
+  word-break: break-word;
+}
+
+.chat-msg.me {
+  align-self: flex-end;
+  background: #1e3a8a;
+}
+
+.chat-input-box {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  outline: none;
+}
+
+/* ================= MODAL & ADMIN ================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: var(--text-muted);
+}
+
+.form-input {
+  width: 100%;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.5rem;
+  outline: none;
+  font-size: 0.95rem;
+}
+
+.form-input:focus {
+  border-color: var(--accent-gold);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.data-table th, .data-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background: var(--bg-card);
+  color: var(--accent-gold);
+}
+
+/* ================= GAME CONTROLS BAR ================= */
+.game-controls {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 560px;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.game-controls .nav-btn {
+  flex: 1;
+  min-width: 80px;
+  justify-content: center;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.5rem;
+}
+
+.game-controls .btn-resign {
+  color: var(--accent-red);
+}
+
+/* ================= HAMBURGER MOBILE MENU ================= */
+.nav-hamburger {
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 1.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+/* ================= AI DIFFICULTY SELECTOR ================= */
+.ai-levels-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.btn-ai-level {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.2rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s ease;
+  color: var(--text-main);
+}
+
+.btn-ai-level:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+}
+
+.ai-level-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.ai-level-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent-gold);
+  margin-bottom: 0.25rem;
+}
+
+.ai-level-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ================= TOAST NOTIFICATIONS ================= */
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.3s ease;
+  max-width: 90%;
+  text-align: center;
+}
+
+.toast-notification.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-notification.info {
+  border-color: var(--accent-gold);
+  background: linear-gradient(135deg, var(--bg-secondary), #2d2308);
+}
+
+.toast-notification.error {
+  border-color: var(--accent-red);
+  background: linear-gradient(135deg, var(--bg-secondary), #2d0808);
+}
+
+/* ================= Responsive Helper ================= */
+@media (max-width: 768px) {
+  .nav-hamburger {
+    display: block;
+  }
+
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    z-index: 99;
+  }
+
+  .nav-menu.open {
+    display: flex;
+  }
+
+  .lobby-hero {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+
+  .quick-actions {
+    justify-content: center;
+  }
+
+  .modes-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .ai-levels-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    padding: 0.5rem 0.75rem;
+  }
+  .brand-title {
+    display: none;
+  }
+  .main-container {
+    padding: 0.5rem;
+  }
+  .hero-text h1 {
+    font-size: 1.4rem;
+  }
+  .board-frame-outer {
+    padding: 8px;
+  }
+  .game-controls {
+    gap: 0.25rem;
+  }
+  .game-controls .nav-btn {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.4rem;
+  }
+  .player-card {
+    padding: 0.5rem 0.75rem;
+  }
+}

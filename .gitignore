@@ -1,0 +1,11 @@
+﻿node_modules/
+*.log
+.env
+cotuong.db
+cotuong.db-wal
+cotuong.db-shm
+.DS_Store
+Thumbs.db
+push.bat
+push.ps1
+push.sh
