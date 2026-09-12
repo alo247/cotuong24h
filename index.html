@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Cờ Tướng Online Pro - Thi Đấu Chuyên Nghiệp</title>
 
-  <!-- PeerJS WebRTC P2P Library for Zero-Server Realtime Online Multiplayer -->
-  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-
-  <!-- Main Stylesheet -->
+  <!-- Main Stylesheet (Must be placed FIRST in head so styling loads instantly) -->
   <link rel="stylesheet" href="styles.css">
+
+  <!-- PeerJS WebRTC P2P Library (Loaded asynchronously with defer so network blocks/delays never break CSS rendering) -->
+  <script defer src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
