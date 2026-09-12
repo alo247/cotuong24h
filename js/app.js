@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var isGameStarted = false;
   var isRegisterMode = false;
   var aiDifficulty = 2;
+  var currentRoomFilter = 'all';
 
   // DOM Elements
   var dom = {
@@ -123,7 +124,16 @@ document.addEventListener('DOMContentLoaded', function () {
     statTotalCoins: document.getElementById('statTotalCoins'),
     btnAdminExport: document.getElementById('btnAdminExport'),
     btnAdminImport: document.getElementById('btnAdminImport'),
-    fileImportJson: document.getElementById('fileImportJson')
+    fileImportJson: document.getElementById('fileImportJson'),
+
+    // Room Stats & Browser
+    statTotalRooms: document.getElementById('statTotalRooms'),
+    statWaitingRooms: document.getElementById('statWaitingRooms'),
+    statPlayingRooms: document.getElementById('statPlayingRooms'),
+    statOnlinePlayers: document.getElementById('statOnlinePlayers'),
+    btnRefreshRooms: document.getElementById('btnRefreshRooms'),
+    inputSearchRoom: document.getElementById('inputSearchRoom'),
+    roomsBrowserGrid: document.getElementById('roomsBrowserGrid')
   };
 
   /* ============================================================
@@ -132,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function initApp() {
     updateUserUI();
     renderBoard();
+    renderRoomStatsAndBrowser();
     bindEvents();
     checkURLRoom();
   }
@@ -185,6 +196,107 @@ document.addEventListener('DOMContentLoaded', function () {
       setTimeout(function () { toast.remove(); }, 300);
     }, 3000);
   }
+
+  /* ================= THỐNG KÊ BÀN ĐẤU & BROWSER PHÒNG ================= */
+  function renderRoomStatsAndBrowser() {
+    var stats = storage.getRoomStats();
+    if (dom.statTotalRooms) dom.statTotalRooms.textContent = stats.totalRooms;
+    if (dom.statWaitingRooms) dom.statWaitingRooms.textContent = stats.waitingRooms;
+    if (dom.statPlayingRooms) dom.statPlayingRooms.textContent = stats.playingRooms;
+    if (dom.statOnlinePlayers) dom.statOnlinePlayers.textContent = stats.onlinePlayers;
+
+    if (!dom.roomsBrowserGrid) return;
+
+    var rooms = storage.getRooms();
+    var searchKeyword = dom.inputSearchRoom ? dom.inputSearchRoom.value.trim().toLowerCase() : '';
+
+    var filtered = rooms.filter(function (r) {
+      if (currentRoomFilter === 'waiting' && r.status !== 'waiting') return false;
+      if (currentRoomFilter === 'playing' && r.status !== 'playing') return false;
+      if (searchKeyword) {
+        var codeMatch = (r.code || '').toLowerCase().indexOf(searchKeyword) !== -1;
+        var hostMatch = (r.hostName || '').toLowerCase().indexOf(searchKeyword) !== -1;
+        var nameMatch = (r.name || '').toLowerCase().indexOf(searchKeyword) !== -1;
+        if (!codeMatch && !hostMatch && !nameMatch) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      dom.roomsBrowserGrid.innerHTML = '<div class="empty-rooms-msg">🎮 Không tìm thấy bàn chơi phù hợp. Bạn có thể tự bấm <strong>"Tạo Phòng Đặt Cược"</strong> để làm Chủ Bàn!</div>';
+      return;
+    }
+
+    var html = '';
+    filtered.forEach(function (room) {
+      var isWaiting = room.status === 'waiting';
+      var statusBadge = isWaiting ?
+        '<span class="room-badge waiting">⏳ Đang chờ</span>' :
+        '<span class="room-badge playing">⚔️ Đang đấu</span>';
+
+      var betDisplay = room.betAmount > 0 ?
+        '<span class="bet-badge-gold">💰 ' + room.betAmount.toLocaleString('vi-VN') + ' Xu</span>' :
+        '<span style="color: #10b981;">🆓 Miễn phí</span>';
+
+      var actionBtn = isWaiting ?
+        '<button class="btn-join-room-card btn-ready" onclick="window.joinRoomByCode(\'' + room.code + '\')">⚡ Vào Chơi Ngay</button>' :
+        '<button class="btn-join-room-card btn-watch" onclick="window.joinRoomByCode(\'' + room.code + '\')">👁️ Xem Trận Đấu</button>';
+
+      html +=
+        '<div class="room-card-item">' +
+          '<div class="room-card-header">' +
+            '<div>' +
+              '<div class="room-title">' + (room.name || ('Phòng ' + room.code)) + '</div>' +
+              '<div class="room-code-tag">Mã phòng: <strong>' + room.code + '</strong></div>' +
+            '</div>' +
+            statusBadge +
+          '</div>' +
+          '<div class="room-details-meta">' +
+            '<div class="room-meta-row">' +
+              '<span class="room-meta-label">Chủ phòng:</span>' +
+              '<span class="room-meta-val">' + (room.hostAvatar || '👤') + ' ' + (room.hostName || 'Ẩn danh') + ' (' + (room.hostElo || 1200) + ')</span>' +
+            '</div>' +
+            '<div class="room-meta-row">' +
+              '<span class="room-meta-label">Mức cược:</span>' +
+              '<span class="room-meta-val">' + betDisplay + '</span>' +
+            '</div>' +
+            '<div class="room-meta-row">' +
+              '<span class="room-meta-label">Thời gian:</span>' +
+              '<span class="room-meta-val">⏱️ ' + (room.timeControl ? room.timeControl.replace('_0', ' phút') : '10 phút') + '</span>' +
+            '</div>' +
+          '</div>' +
+          actionBtn +
+        '</div>';
+    });
+
+    dom.roomsBrowserGrid.innerHTML = html;
+  }
+
+  // Global helper for card clicks
+  window.joinRoomByCode = function (roomCode) {
+    if (!roomCode) return;
+    p2p.joinRoom(roomCode, function (success) {
+      if (success) {
+        showToast('Đã tham gia thành công phòng ' + roomCode + '!', 'info');
+        // Update room status in storage
+        var rooms = storage.getRooms();
+        var room = rooms.find(function (r) { return r.code === roomCode; });
+        if (room) {
+          room.status = 'playing';
+          if (currentUser) {
+            room.guestId = currentUser.id;
+            room.guestName = currentUser.displayName;
+            room.guestElo = currentUser.elo;
+          }
+          storage.addOrUpdateRoom(room);
+          renderRoomStatsAndBrowser();
+        }
+        startNewGame('p2p', room ? room.betAmount : 0, 'black');
+      } else {
+        showToast('Không thể kết nối đến phòng ' + roomCode + '. Phòng đã đóng hoặc mã không hợp lệ!', 'error');
+      }
+    });
+  };
 
   /* ============================================================
    * 2. VẼ BÀN CỜ VÀ XỬ LÝ CHỌN QUÂN CỜ
@@ -695,6 +807,26 @@ document.addEventListener('DOMContentLoaded', function () {
       p2p.createRoom(null, function (code) {
         dom.modalCreateRoom.classList.remove('active');
         showToast('Đã tạo phòng! Mã hẹn chơi: ' + code, 'info');
+
+        // Thêm phòng vào Storage danh sách phòng trực tiếp
+        var newRoom = {
+          code: code,
+          name: 'Bàn đấu của ' + (currentUser ? currentUser.displayName : 'Kỳ thủ'),
+          hostId: currentUser ? currentUser.id : 'u_guest',
+          hostName: currentUser ? currentUser.displayName : 'Kỳ thủ Ẩn danh',
+          hostElo: currentUser ? currentUser.elo : 1200,
+          hostAvatar: currentUser ? (currentUser.avatar || '🐉') : '🐉',
+          betAmount: bet,
+          timeControl: timeControl + '_0',
+          status: 'waiting',
+          guestId: null,
+          guestName: null,
+          guestElo: null,
+          createdAt: new Date().toISOString()
+        };
+        storage.addOrUpdateRoom(newRoom);
+        renderRoomStatsAndBrowser();
+
         // Copy mã phòng vào clipboard
         if (navigator.clipboard) {
           navigator.clipboard.writeText(code).catch(function () {});
@@ -703,6 +835,38 @@ document.addEventListener('DOMContentLoaded', function () {
         startNewGame('p2p', bet, 'red');
       });
     };
+
+    // Refresh Room List Button
+    if (dom.btnRefreshRooms) {
+      dom.btnRefreshRooms.onclick = function () {
+        renderRoomStatsAndBrowser();
+        showToast('Đã cập nhật thống kê & danh sách phòng mới nhất!', 'info');
+      };
+    }
+
+    // Room Search Box
+    if (dom.inputSearchRoom) {
+      dom.inputSearchRoom.oninput = function () {
+        renderRoomStatsAndBrowser();
+      };
+    }
+
+    // Filter Tabs (Tất cả, Đang chờ, Đang thi đấu)
+    document.querySelectorAll('.filter-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.filter-tab').forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        currentRoomFilter = tab.dataset.filter || 'all';
+        renderRoomStatsAndBrowser();
+      });
+    });
+
+    // Lắng nghe sự kiện đồng bộ storage giữa các tab trình duyệt (Realtime Sync)
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'cotuong_rooms' || e.key === 'cotuong_users') {
+        renderRoomStatsAndBrowser();
+      }
+    });
 
     // Join Room
     var btnJoinRoom = document.getElementById('btnJoinRoom');

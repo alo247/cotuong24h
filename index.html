@@ -88,6 +88,66 @@
           <div class="mode-desc">Chơi 2 người trực tiếp trên cùng một điện thoại, máy tính bảng hoặc laptop. Hẹn gặp mặt giao hữu.</div>
         </div>
       </div>
+
+      <!-- ROOM STATISTICS & ROOM BROWSER SECTION -->
+      <div class="room-stats-section" style="margin-top: 2.5rem;">
+        <h2 style="color: var(--accent-gold); margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+          <span>📊 Thống Kê & Danh Sách Phòng Chơi Trực Tiếp</span>
+          <button class="btn-action btn-secondary" id="btnRefreshRooms" style="font-size: 0.85rem; padding: 0.4rem 0.85rem; width: auto;">🔄 Làm mới phòng</button>
+        </h2>
+
+        <!-- STATS CARDS -->
+        <div class="stats-cards-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statTotalRooms">0</div>
+              <div class="stat-label">Tổng Số Phòng</div>
+            </div>
+          </div>
+
+          <div class="stat-card stat-waiting">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statWaitingRooms">0</div>
+              <div class="stat-label">Đang Chờ Đối Thủ</div>
+            </div>
+          </div>
+
+          <div class="stat-card stat-playing">
+            <div class="stat-icon">⚔️</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statPlayingRooms">0</div>
+              <div class="stat-label">Đang Thi Đấu</div>
+            </div>
+          </div>
+
+          <div class="stat-card stat-online">
+            <div class="stat-icon">👥</div>
+            <div class="stat-info">
+              <div class="stat-value" id="statOnlinePlayers">0</div>
+              <div class="stat-label">Kỳ Thủ Trực Tuyến</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROOM FILTER & SEARCH TOOLBAR -->
+        <div class="room-filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">Tất Cả Phòng</button>
+            <button class="filter-tab" data-filter="waiting">⏳ Phòng Đang Chờ</button>
+            <button class="filter-tab" data-filter="playing">⚔️ Đang Thi Đấu</button>
+          </div>
+          <div class="room-search-box">
+            <input type="text" id="inputSearchRoom" class="form-input" placeholder="🔎 Tìm theo mã phòng, tên chủ phòng..." style="padding: 0.5rem 0.8rem; font-size: 0.88rem;" />
+          </div>
+        </div>
+
+        <!-- ROOM LIST GRID CONTAINER -->
+        <div class="rooms-browser-grid" id="roomsBrowserGrid">
+          <!-- Room cards dynamically rendered by JavaScript -->
+        </div>
+      </div>
     </section>
 
 

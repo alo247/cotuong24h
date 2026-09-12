@@ -23,7 +23,8 @@
     GAMES: 'cotuong_games',
     TRANSACTIONS: 'cotuong_transactions',
     FRIENDS: 'cotuong_friends',
-    SETTINGS: 'cotuong_settings'
+    SETTINGS: 'cotuong_settings',
+    ROOMS: 'cotuong_rooms'
   };
 
   // Khởi tạo dữ liệu mẫu ban đầu nếu chưa có
@@ -131,6 +132,57 @@
 
     if (!localStorage.getItem(STORAGE_KEYS.GAMES)) {
       localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify([]));
+    }
+
+    if (!localStorage.getItem(STORAGE_KEYS.ROOMS)) {
+      var defaultRooms = [
+        {
+          code: '888888',
+          name: 'Kỳ Viện Hoàng Gia - Bàn Vip',
+          hostId: 'u_admin',
+          hostName: 'Admin Kiện Tướng',
+          hostElo: 2200,
+          hostAvatar: '♚',
+          betAmount: 50000,
+          timeControl: '15_0',
+          status: 'playing',
+          guestId: 'u_kythu1',
+          guestName: 'Kỳ Thủ Kỳ Cựu',
+          guestElo: 1850,
+          createdAt: new Date().toISOString()
+        },
+        {
+          code: '666666',
+          name: 'Phòng Thách Đấu - Nhận Kèo Trực Tiếp',
+          hostId: 'u_nguyenvana',
+          hostName: 'Nguyễn Văn A',
+          hostElo: 1350,
+          hostAvatar: '👤',
+          betAmount: 10000,
+          timeControl: '10_0',
+          status: 'waiting',
+          guestId: null,
+          guestName: null,
+          guestElo: null,
+          createdAt: new Date().toISOString()
+        },
+        {
+          code: '123456',
+          name: 'Giao Lưu Hữu Nghị - Không Cược',
+          hostId: 'u_tranvanb',
+          hostName: 'Trần Văn B',
+          hostElo: 1200,
+          hostAvatar: '♟',
+          betAmount: 0,
+          timeControl: '20_0',
+          status: 'waiting',
+          guestId: null,
+          guestName: null,
+          guestElo: null,
+          createdAt: new Date().toISOString()
+        }
+      ];
+      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(defaultRooms));
     }
   }
 
@@ -428,6 +480,57 @@
     } catch (e) {
       return { success: false, message: 'Dữ liệu không hợp lệ!' };
     }
+  };
+
+  /* ================= Live Room & Match Discovery ================= */
+
+  AppStorage.prototype.getRooms = function () {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.ROOMS)) || [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  AppStorage.prototype.saveRooms = function (rooms) {
+    localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
+  };
+
+  AppStorage.prototype.addOrUpdateRoom = function (roomData) {
+    var rooms = this.getRooms();
+    var idx = rooms.findIndex(function (r) { return r.code === roomData.code; });
+    if (idx !== -1) {
+      rooms[idx] = Object.assign({}, rooms[idx], roomData);
+    } else {
+      rooms.unshift(roomData);
+    }
+    this.saveRooms(rooms);
+    return rooms;
+  };
+
+  AppStorage.prototype.removeRoom = function (roomCode) {
+    var rooms = this.getRooms();
+    var filtered = rooms.filter(function (r) { return r.code !== roomCode; });
+    this.saveRooms(filtered);
+    return filtered;
+  };
+
+  AppStorage.prototype.getRoomStats = function () {
+    var rooms = this.getRooms();
+    var totalRooms = rooms.length;
+    var waitingRooms = rooms.filter(function (r) { return r.status === 'waiting'; }).length;
+    var playingRooms = rooms.filter(function (r) { return r.status === 'playing'; }).length;
+    var totalOnlinePlayers = rooms.reduce(function (count, r) {
+      var playersInRoom = (r.hostId ? 1 : 0) + (r.guestId ? 1 : 0);
+      return count + playersInRoom;
+    }, 0);
+
+    return {
+      totalRooms: totalRooms,
+      waitingRooms: waitingRooms,
+      playingRooms: playingRooms,
+      onlinePlayers: totalOnlinePlayers
+    };
   };
 
   return AppStorage;
