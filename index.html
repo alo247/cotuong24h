@@ -409,6 +409,10 @@
         <input type="text" id="inputRoomName" class="form-input" placeholder="VD: Bàn Cao Thủ, Phòng Giao Hữu..." maxlength="40">
       </div>
       <div class="form-group">
+        <label class="form-label">Mật Khẩu Phòng (Tùy chọn)</label>
+        <input type="password" id="inputRoomPassword" class="form-input" placeholder="Để trống nếu là phòng công khai (không cần mật khẩu)" maxlength="20">
+      </div>
+      <div class="form-group">
         <label class="form-label">Mức Cược (Xu)</label>
         <select id="selectBetAmount" class="form-input">
           <option value="0">Tự do (Không cược)</option>
@@ -448,6 +452,29 @@
       <div style="display: flex; gap: 0.8rem; margin-top: 1.5rem;">
         <button type="button" class="btn-action btn-secondary close-btn" style="flex: 1; justify-content: center;">Đóng</button>
         <button type="button" class="btn-action btn-primary" id="btnSubmitJoinRoom" style="flex: 2; justify-content: center; font-size: 1rem;">⚡ Vào Phòng Ngay</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 2.6. ROOM PASSWORD PROMPT MODAL -->
+  <div class="modal-overlay" id="modalRoomPasswordPrompt">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">🔒 Nhập Mật Khẩu Phòng</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Bàn cờ này đã được chủ bàn cài đặt mật khẩu bảo vệ. Vui lòng nhập mật khẩu để vào thi đấu.
+      </p>
+      <input type="hidden" id="pendingRoomCode">
+      <div class="form-group">
+        <label class="form-label">Mật Khẩu Phòng</label>
+        <input type="password" id="inputVerifyRoomPassword" class="form-input" placeholder="Nhập mật khẩu phòng" style="text-align: center; font-size: 1.15rem; letter-spacing: 2px;" required>
+      </div>
+      <div style="display: flex; gap: 0.8rem; margin-top: 1.5rem;">
+        <button type="button" class="btn-action btn-secondary close-btn" style="flex: 1; justify-content: center;">Hủy Bỏ</button>
+        <button type="button" class="btn-action btn-primary" id="btnSubmitVerifyPassword" style="flex: 2; justify-content: center; font-size: 1rem;">Xác Nhận Vào Bàn</button>
       </div>
     </div>
   </div>

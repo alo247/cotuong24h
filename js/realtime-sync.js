@@ -254,6 +254,13 @@
     this.heartbeatTimer = setInterval(sendPing, 8000); // Mỗi 8 giây ping 1 lần
   };
 
+  /**
+   * Yêu cầu đồng bộ phòng ngay lập tức từ các thiết bị khác đang online
+   */
+  RealtimeSync.prototype.requestRoomsSync = function () {
+    this._publish(TOPICS.SYNC_REQ, { fromId: this.clientId, time: Date.now() });
+  };
+
   RealtimeSync.prototype.stopHeartbeat = function () {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);

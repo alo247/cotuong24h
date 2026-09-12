@@ -49,7 +49,7 @@
   P2PNetwork.prototype.createRoom = function (customCode, callback) {
     var self = this;
     this.isHost = true;
-    this.roomCode = customCode || ('ct_' + Math.floor(100000 + Math.random() * 900000));
+    this.roomCode = customCode || ('' + Math.floor(100000 + Math.random() * 900000));
     var peerId = 'cotuong_' + this.roomCode;
 
     // Kiểm tra thư viện PeerJS

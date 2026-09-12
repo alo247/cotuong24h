@@ -135,13 +135,20 @@ document.addEventListener('DOMContentLoaded', function () {
     inputSearchRoom: document.getElementById('inputSearchRoom'),
     roomsBrowserGrid: document.getElementById('roomsBrowserGrid'),
 
-    // Room Name Input
+    // Room Name & Password Inputs
     inputRoomName: document.getElementById('inputRoomName'),
+    inputRoomPassword: document.getElementById('inputRoomPassword'),
 
     // Join Room Modal
     modalJoinRoom: document.getElementById('modalJoinRoom'),
     inputJoinRoomCode: document.getElementById('inputJoinRoomCode'),
     btnSubmitJoinRoom: document.getElementById('btnSubmitJoinRoom'),
+
+    // Room Password Prompt Modal
+    modalRoomPasswordPrompt: document.getElementById('modalRoomPasswordPrompt'),
+    inputVerifyRoomPassword: document.getElementById('inputVerifyRoomPassword'),
+    btnSubmitVerifyPassword: document.getElementById('btnSubmitVerifyPassword'),
+    pendingRoomCode: document.getElementById('pendingRoomCode'),
 
     // Online Community & Friends
     btnRefreshOnlineUsers: document.getElementById('btnRefreshOnlineUsers'),
@@ -436,6 +443,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var statusBadge = isWaiting ?
         '<span class="room-badge waiting">⏳ Đang chờ</span>' :
         '<span class="room-badge playing">⚔️ Đang đấu</span>';
+      var pwdBadge = room.hasPassword ? '<span class="room-badge password">🔒 Mật khẩu</span>' : '';
 
       var betDisplay = room.betAmount > 0 ?
         '<span class="bet-badge-gold">💰 ' + room.betAmount.toLocaleString('vi-VN') + ' Xu</span>' :
@@ -452,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function () {
               '<div class="room-title">' + (room.name || ('Phòng ' + room.code)) + '</div>' +
               '<div class="room-code-tag">Mã phòng: <strong>' + room.code + '</strong></div>' +
             '</div>' +
-            statusBadge +
+            '<div>' + statusBadge + pwdBadge + '</div>' +
           '</div>' +
           '<div class="room-details-meta">' +
             '<div class="room-meta-row">' +
@@ -494,27 +502,56 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    showToast('Đang kết nối P2P tới phòng ' + roomCode + '...', 'info');
+    // Nếu phòng có cài đặt mật khẩu -> Yêu cầu nhập mật khẩu
+    if (targetRoom && targetRoom.hasPassword && targetRoom.password) {
+      if (dom.modalRoomPasswordPrompt) {
+        dom.pendingRoomCode.value = roomCode;
+        dom.inputVerifyRoomPassword.value = '';
+        dom.modalRoomPasswordPrompt.classList.add('active');
+        if (dom.inputVerifyRoomPassword) dom.inputVerifyRoomPassword.focus();
+        return;
+      }
+    }
 
+    executeDirectJoin(roomCode, targetRoom);
+  };
+
+  function executeDirectJoin(roomCode, targetRoom) {
+    // 1. CHUYỂN NGAY SANG GIAO DIỆN BÀN CỜ LẬP TỨC (KHÔNG BỊ KẸT Ở SẢNH)
+    switchView('Game');
+    startNewGame('p2p', targetRoom ? targetRoom.betAmount : 0, 'black', false);
+    if (targetRoom) {
+      dom.nameRed.textContent = targetRoom.hostName || 'Chủ Bàn (Đỏ)';
+      dom.eloRed.textContent = 'ELO: ' + (targetRoom.hostElo || 1200);
+      dom.avatarRed.textContent = targetRoom.hostAvatar || '🐉';
+    }
+    showRoomTopBanner(roomCode, targetRoom ? targetRoom.name : 'Bàn Đấu Cờ Tướng', targetRoom ? targetRoom.betAmount : 0, false);
+    if (dom.bannerRoomStatus) {
+      dom.bannerRoomStatus.textContent = '🔄 ĐANG KẾT NỐI VỚI CHỦ BÀN...';
+      dom.bannerRoomStatus.classList.remove('playing');
+    }
+    showToast('Đang kết nối vào phòng ' + roomCode + '...', 'info');
+
+    // 2. Bắt tay P2P trong nền
     p2p.joinRoom(roomCode, function (success) {
       if (success) {
-        showToast('Kết nối thành công! Đã vào phòng ' + roomCode, 'info');
-        // Cập nhật trạng thái phòng chỉ khi kết nối P2P thật sự thành công
+        showToast('Kết nối thành công! Trận đấu bắt đầu.', 'info');
+        if (dom.bannerRoomStatus) {
+          dom.bannerRoomStatus.textContent = '⚔️ ĐANG THI ĐẤU';
+          dom.bannerRoomStatus.classList.add('playing');
+        }
+        // Cập nhật trạng thái phòng
         if (targetRoom) {
           targetRoom.status = 'playing';
           targetRoom.guestId = currentUser.id;
           targetRoom.guestName = currentUser.displayName;
           targetRoom.guestElo = currentUser.elo;
           storage.addOrUpdateRoom(targetRoom);
+          if (window.RealtimeSync) {
+            window.RealtimeSync.broadcastRoomUpdated(targetRoom);
+          }
           renderRoomStatsAndBrowser();
         }
-        startNewGame('p2p', targetRoom ? targetRoom.betAmount : 0, 'black', false);
-        if (targetRoom) {
-          dom.nameRed.textContent = targetRoom.hostName || 'Chủ Bàn (Đỏ)';
-          dom.eloRed.textContent = 'ELO: ' + (targetRoom.hostElo || 1200);
-          dom.avatarRed.textContent = targetRoom.hostAvatar || '🐉';
-        }
-        showRoomTopBanner(roomCode, targetRoom ? targetRoom.name : 'Bàn Đấu Cờ Tướng', targetRoom ? targetRoom.betAmount : 0, false);
         if (currentUser) {
           p2p.send({
             type: 'PLAYER_INFO',
@@ -522,15 +559,21 @@ document.addEventListener('DOMContentLoaded', function () {
           });
         }
       } else {
-        // Kết nối P2P thất bại → xóa phòng ma khỏi danh sách
+        if (dom.bannerRoomStatus) {
+          dom.bannerRoomStatus.textContent = '⚠️ MẤT KẾT NỐI';
+        }
+        // Xóa phòng ma nếu chủ phòng đã offline
         if (targetRoom) {
           storage.removeRoom(roomCode);
+          if (window.RealtimeSync) {
+            window.RealtimeSync.broadcastRoomClosed(roomCode);
+          }
           renderRoomStatsAndBrowser();
         }
-        showToast('Không thể kết nối đến phòng ' + roomCode + '. Phòng đã đóng hoặc chủ phòng đã offline!', 'error');
+        showToast('Không thể kết nối đến chủ bàn ' + roomCode + '. Chủ bàn có thể đã offline!', 'error');
       }
     });
-  };
+  }
 
   /* ============================================================
    * 2. VẼ BÀN CỜ VÀ XỬ LÝ CHỌN QUÂN CỜ
@@ -1085,45 +1128,53 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
       }
 
-      p2p.createRoom(null, function (code) {
-        dom.modalCreateRoom.classList.remove('active');
+      var roomPassword = dom.inputRoomPassword ? dom.inputRoomPassword.value.trim() : '';
 
-        // Lưu phòng vào Storage
-        var newRoom = {
-          code: code,
-          name: roomName,
-          hostId: currentUser ? currentUser.id : 'u_guest',
-          hostName: currentUser ? currentUser.displayName : 'Kỳ thủ Ẩn danh',
-          hostElo: currentUser ? currentUser.elo : 1200,
-          hostAvatar: currentUser ? (currentUser.avatar || '🐉') : '🐉',
-          betAmount: bet,
-          timeControl: timeControl + '_0',
-          status: 'waiting',
-          guestId: null,
-          guestName: null,
-          guestElo: null,
-          createdAt: new Date().toISOString()
-        };
-        storage.addOrUpdateRoom(newRoom);
-        renderRoomStatsAndBrowser();
+      // TẠO MÃ PHÒNG 6 CHỮ SỐ TỨC THÌ (HIỂN THỊ NGAY KHÔNG CẦN CHỜ MẠNG)
+      var code = '' + Math.floor(100000 + Math.random() * 900000);
+      dom.modalCreateRoom.classList.remove('active');
 
-        // Vào thẳng bàn cờ và hiển thị mã phòng ngay trong khung chat của phòng chờ
-        switchView('Game');
-        startNewGame('p2p', bet, 'red', true); // isWaiting = true: Chờ đối thủ thật, KHÔNG tạo đối thủ ảo
-        dom.lblRoomBet.textContent = 'Cược: ' + (bet > 0 ? bet.toLocaleString('vi-VN') + ' Xu' : 'Tự do') + ' | Mã: ' + code;
-        appendSystemRoomNotice(code, roomName, bet, timeControl);
-        showRoomTopBanner(code, roomName, bet, true);
+      // Lưu phòng vào Storage
+      var newRoom = {
+        code: code,
+        name: roomName,
+        hostId: currentUser ? currentUser.id : 'u_guest',
+        hostName: currentUser ? currentUser.displayName : 'Kỳ thủ Ẩn danh',
+        hostElo: currentUser ? currentUser.elo : 1200,
+        hostAvatar: currentUser ? (currentUser.avatar || '🐉') : '🐉',
+        betAmount: bet,
+        timeControl: timeControl + '_0',
+        status: 'waiting',
+        hasPassword: !!roomPassword,
+        password: roomPassword || null,
+        guestId: null,
+        guestName: null,
+        guestElo: null,
+        createdAt: new Date().toISOString()
+      };
+      storage.addOrUpdateRoom(newRoom);
+      renderRoomStatsAndBrowser();
 
-        // Phát sóng phòng mới tới tất cả các thiết bị khác qua Realtime Cloud Sync
-        if (window.RealtimeSync) {
-          window.RealtimeSync.broadcastRoomCreated(newRoom);
-        }
+      // Vào thẳng bàn cờ và hiển thị mã phòng ngay trên banner và khung chat của phòng chờ
+      switchView('Game');
+      startNewGame('p2p', bet, 'red', true); // isWaiting = true: Chờ đối thủ thật, KHÔNG tạo đối thủ ảo
+      dom.lblRoomBet.textContent = 'Cược: ' + (bet > 0 ? bet.toLocaleString('vi-VN') + ' Xu' : 'Tự do') + ' | Mã: ' + code;
+      appendSystemRoomNotice(code, roomName, bet, timeControl);
+      showRoomTopBanner(code, roomName, bet, true);
 
-        showToast('Đã tạo bàn cờ! Mã phòng: ' + code, 'info');
+      // Phát sóng phòng mới tới tất cả các thiết bị khác qua Realtime Cloud Sync
+      if (window.RealtimeSync) {
+        window.RealtimeSync.broadcastRoomCreated(newRoom);
+      }
 
-        // Reset form
-        if (dom.inputRoomName) dom.inputRoomName.value = '';
-      });
+      showToast('Đã tạo bàn cờ! Mã phòng của bạn: ' + code, 'info');
+
+      // Khởi tạo PeerJS P2P trong nền với mã 6 số này
+      p2p.createRoom(code, function () {});
+
+      // Reset form
+      if (dom.inputRoomName) dom.inputRoomName.value = '';
+      if (dom.inputRoomPassword) dom.inputRoomPassword.value = '';
     };
 
     // Sự kiện nút Copy Mã và Copy Link trên Room Top Banner
@@ -1162,12 +1213,20 @@ document.addEventListener('DOMContentLoaded', function () {
       };
     }
 
-    // Refresh Room List Button — dọn phòng hết hạn + cập nhật
+    // Refresh Room List Button — dọn phòng hết hạn + yêu cầu sync từ Cloud WebSockets
     if (dom.btnRefreshRooms) {
       dom.btnRefreshRooms.onclick = function () {
+        dom.btnRefreshRooms.classList.add('btn-refresh-spin');
+        setTimeout(function () { dom.btnRefreshRooms.classList.remove('btn-refresh-spin'); }, 800);
+
+        if (window.RealtimeSync) {
+          window.RealtimeSync.requestRoomsSync();
+        }
+
         storage.cleanupStaleRooms();
         renderRoomStatsAndBrowser();
-        showToast('Đã dọn phòng hết hạn & cập nhật danh sách!', 'info');
+        renderOnlineUsersAndCommunity();
+        showToast('Đã đồng bộ danh sách phòng trực tiếp!', 'info');
       };
     }
 
@@ -1255,6 +1314,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       };
     }
+
+    // Modal Xác Thực Mật Khẩu Phòng
+    if (dom.btnSubmitVerifyPassword) {
+      dom.btnSubmitVerifyPassword.onclick = function () {
+        var code = dom.pendingRoomCode ? dom.pendingRoomCode.value : '';
+        var entered = dom.inputVerifyRoomPassword ? dom.inputVerifyRoomPassword.value.trim() : '';
+        var rooms = storage.getRooms();
+        var targetRoom = rooms.find(function (r) { return r.code === code; });
+        if (targetRoom && targetRoom.password) {
+          if (targetRoom.password !== entered) {
+            showToast('Mật khẩu phòng không chính xác!', 'error');
+            if (dom.inputVerifyRoomPassword) dom.inputVerifyRoomPassword.focus();
+            return;
+          }
+        }
+        if (dom.modalRoomPasswordPrompt) dom.modalRoomPasswordPrompt.classList.remove('active');
+        executeDirectJoin(code, targetRoom);
+      };
+    }
+
+    if (dom.inputVerifyRoomPassword) {
+      dom.inputVerifyRoomPassword.onkeypress = function (e) {
+        if (e.key === 'Enter') {
+          if (dom.btnSubmitVerifyPassword) dom.btnSubmitVerifyPassword.click();
+        }
+      };
+    }
+
+    // Tự động quét và làm mới danh sách phòng mỗi 3 giây khi ở sảnh để cập nhật tức thì không cần F5
+    setInterval(function () {
+      if (dom.viewLobby && dom.viewLobby.classList.contains('active')) {
+        renderRoomStatsAndBrowser();
+      }
+    }, 3000);
 
     // Chat (XSS-safe)
     dom.btnSendChat.onclick = sendChatMsg;

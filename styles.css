@@ -1028,6 +1028,22 @@ body {
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
+.room-badge.password {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  margin-left: 0.3rem;
+}
+
+.btn-refresh-spin {
+  display: inline-block;
+  animation: spinIcon 0.8s linear infinite;
+}
+@keyframes spinIcon {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .room-title {
   font-weight: 700;
   font-size: 1rem;
