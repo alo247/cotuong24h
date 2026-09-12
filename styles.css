@@ -1265,3 +1265,215 @@ body {
   }
 }
 
+/* ================= THẺ THÔNG BÁO HỆ THỐNG TRONG KHUNG CHAT ================= */
+.chat-system-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+  border: 1px solid var(--accent-gold);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  margin: 0.5rem 0;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.15);
+  font-size: 0.85rem;
+}
+
+.chat-system-title {
+  color: var(--accent-gold);
+  font-weight: 800;
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.chat-room-code-box {
+  background: var(--bg-primary);
+  border: 1px dashed var(--accent-gold);
+  border-radius: 0.5rem;
+  padding: 0.6rem;
+  margin: 0.5rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chat-room-code-val {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  letter-spacing: 2px;
+  font-family: 'Courier New', monospace;
+}
+
+.btn-chat-copy {
+  background: var(--accent-gold);
+  color: #1a1a2e;
+  border: none;
+  padding: 0.35rem 0.7rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-chat-copy:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+.chat-system-desc {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin-top: 0.3rem;
+}
+
+/* ================= KỲ THỦ & BẠN BÈ ĐANG ONLINE ================= */
+.online-community-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.community-tabs-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.8rem;
+}
+
+.community-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.community-tab:hover {
+  color: var(--text-main);
+  background: var(--bg-secondary);
+}
+
+.community-tab.active {
+  color: var(--bg-primary);
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.community-user-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.community-user-card:hover {
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+}
+
+.community-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  overflow: hidden;
+}
+
+.community-user-avatar {
+  font-size: 1.6rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  background: var(--bg-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.community-user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.community-user-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.online {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.status-dot.playing {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.btn-invite-user {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-invite-user:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+}
+
+.empty-community-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  background: var(--bg-secondary);
+  border-radius: 0.5rem;
+  border: 1px dashed var(--border-color);
+}
+

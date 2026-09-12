@@ -469,7 +469,32 @@
 
   AppStorage.prototype.getRooms = function () {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.ROOMS)) || [];
+      var raw = JSON.parse(localStorage.getItem(STORAGE_KEYS.ROOMS)) || [];
+      var ghostCodes = ['888888', '666666', '123456'];
+      var sampleHosts = ['u_admin', 'u_kythu1', 'u_nguyenvana', 'u_tranthib', 'u_tranvanb'];
+      var currentUser = this.getCurrentUser();
+      var currentUserId = currentUser ? currentUser.id : null;
+      var now = Date.now();
+      var MAX_WAIT_MS = 15 * 60 * 1000; // 15 phút không kết nối sẽ dọn
+
+      var clean = raw.filter(function (r) {
+        if (!r || !r.code) return false;
+        // Xóa phòng ảo theo mã mẫu
+        if (ghostCodes.indexOf(r.code) !== -1) return false;
+        // Xóa phòng ảo của bot mẫu (trừ khi chính user hiện tại đang login là tài khoản đó)
+        if (sampleHosts.indexOf(r.hostId) !== -1 && r.hostId !== currentUserId) return false;
+        // Xóa phòng chờ quá 15 phút không ai vào
+        var age = now - new Date(r.createdAt || 0).getTime();
+        if (r.status === 'waiting' && age > MAX_WAIT_MS) return false;
+        return true;
+      });
+
+      // Nếu có phòng ảo bị loại bỏ, đồng bộ lại localStorage lập tức
+      if (clean.length !== raw.length) {
+        localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(clean));
+      }
+
+      return clean;
     } catch (e) {
       return [];
     }
@@ -545,6 +570,58 @@
       this.saveRooms(cleaned);
     }
     return cleaned;
+  };
+
+  /* ================= Danh Sách Kỳ Thủ Online & Bạn Bè ================= */
+
+  AppStorage.prototype.getOnlineUsers = function (excludeUserId) {
+    try {
+      var users = this.getUsers();
+      return users.filter(function (u) {
+        return u.status === 'online' && (!excludeUserId || u.id !== excludeUserId);
+      });
+    } catch (e) {
+      return [];
+    }
+  };
+
+  AppStorage.prototype.getFriends = function (userId) {
+    try {
+      if (!userId) return [];
+      var friendsRaw = JSON.parse(localStorage.getItem(STORAGE_KEYS.FRIENDS)) || [];
+      var users = this.getUsers();
+
+      // Lấy danh sách friendId mà user đã kết bạn
+      var friendIds = [];
+      friendsRaw.forEach(function (f) {
+        if (f.userId === userId && f.status === 'accepted') friendIds.push(f.friendId);
+        else if (f.friendId === userId && f.status === 'accepted') friendIds.push(f.userId);
+      });
+
+      return users.filter(function (u) {
+        return friendIds.indexOf(u.id) !== -1;
+      });
+    } catch (e) {
+      return [];
+    }
+  };
+
+  AppStorage.prototype.addFriend = function (userId, friendId) {
+    try {
+      if (!userId || !friendId || userId === friendId) return { success: false, message: 'ID không hợp lệ' };
+      var friendsRaw = JSON.parse(localStorage.getItem(STORAGE_KEYS.FRIENDS)) || [];
+      var existing = friendsRaw.find(function (f) {
+        return (f.userId === userId && f.friendId === friendId) || (f.userId === friendId && f.friendId === userId);
+      });
+      if (existing) {
+        return { success: false, message: 'Đã có trong danh sách bạn bè!' };
+      }
+      friendsRaw.push({ userId: userId, friendId: friendId, status: 'accepted', createdAt: new Date().toISOString() });
+      localStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify(friendsRaw));
+      return { success: true, message: 'Đã thêm bạn thành công!' };
+    } catch (e) {
+      return { success: false, message: 'Lỗi khi kết bạn' };
+    }
   };
 
   return AppStorage;

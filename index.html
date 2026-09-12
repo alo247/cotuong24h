@@ -137,32 +137,28 @@
           <!-- Room cards dynamically rendered by JavaScript -->
         </div>
       </div>
+
+      <!-- ONLINE USERS & FRIENDS SECTION -->
+      <div class="online-community-section" style="margin-top: 2.5rem;">
+        <h2 style="color: var(--accent-gold); margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+          <span>👥 Kỳ Thủ & Bạn Bè Đang Online</span>
+          <button class="btn-action btn-secondary" id="btnRefreshOnlineUsers" style="font-size: 0.85rem; padding: 0.4rem 0.85rem; width: auto;">🔄 Làm mới</button>
+        </h2>
+
+        <div class="community-tabs-bar">
+          <button class="community-tab active" data-tab="online">🌐 Kỳ Thủ Đang Online (<span id="countOnlineUsers">0</span>)</button>
+          <button class="community-tab" data-tab="friends">🤝 Bạn Bè Của Tôi (<span id="countFriends">0</span>)</button>
+        </div>
+
+        <div class="community-grid" id="communityGrid">
+          <!-- Dynamic rendering of online users and friends -->
+        </div>
+      </div>
     </section>
 
 
     <!-- PAGE 2: GAME BOARD VIEW -->
     <section id="viewGame" class="page-view">
-
-      <!-- KHUNG CHỜ ĐỐI THỦ (hiện khi chờ P2P) -->
-      <div id="waitingRoomOverlay" class="waiting-room-overlay" style="display: none;">
-        <div class="waiting-room-card">
-          <div class="waiting-room-icon">⏳</div>
-          <h2 class="waiting-room-title">Đang Chờ Đối Thủ Kết Nối...</h2>
-          <p class="waiting-room-subtitle" id="waitingRoomName">Phòng của bạn</p>
-          <div class="waiting-room-code-box">
-            <div class="waiting-code-label">Mã Phòng Mời Bạn Bè:</div>
-            <div class="waiting-code-value" id="waitingRoomCode">------</div>
-            <button class="btn-copy-code" id="btnCopyRoomCode" title="Sao chép mã phòng">📋 Copy Mã Phòng</button>
-          </div>
-          <div class="waiting-room-info">
-            <span id="waitingRoomBet">Cược: 0 Xu</span>
-            <span id="waitingRoomTime">Thời gian: 10 phút</span>
-          </div>
-          <p class="waiting-room-hint">Gửi mã phòng trên cho bạn bè để bắt đầu thi đấu!</p>
-          <button class="btn-action btn-resign" id="btnCancelWaiting" style="margin-top: 1rem; width: auto; padding: 0.5rem 1.5rem;">Hủy Phòng & Về Sảnh</button>
-        </div>
-      </div>
-
       <div class="game-layout">
 
         <!-- Left: Xiangqi Board & Players -->
@@ -405,6 +401,28 @@
         </select>
       </div>
       <button class="btn-action btn-primary" id="btnConfirmCreateRoom" style="width: 100%; justify-content: center;">Tạo Phòng & Vào Chờ Đối Thủ</button>
+    </div>
+  </div>
+
+
+  <!-- 2.5. JOIN ROOM BY CODE MODAL -->
+  <div class="modal-overlay" id="modalJoinRoom">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">🔗 Vào Phòng Thi Đấu</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.2rem;">
+        Nhập mã phòng thi đấu do bạn bè hoặc chủ bàn chia sẻ để kết nối và bắt đầu thi đấu trực tiếp.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Mã Phòng Thi Đấu</label>
+        <input type="text" id="inputJoinRoomCode" class="form-input" placeholder="Ví dụ: ct_123456" style="font-size: 1.15rem; font-weight: 700; letter-spacing: 2px; text-align: center;" required>
+      </div>
+      <div style="display: flex; gap: 0.8rem; margin-top: 1.5rem;">
+        <button type="button" class="btn-action btn-secondary close-btn" style="flex: 1; justify-content: center;">Đóng</button>
+        <button type="button" class="btn-action btn-primary" id="btnSubmitJoinRoom" style="flex: 2; justify-content: center; font-size: 1rem;">⚡ Vào Phòng Ngay</button>
+      </div>
     </div>
   </div>
 
