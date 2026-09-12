@@ -134,59 +134,42 @@
       localStorage.setItem(STORAGE_KEYS.GAMES, JSON.stringify([]));
     }
 
+    // Phòng chơi: khởi tạo mảng rỗng — KHÔNG tạo phòng ảo/đối thủ ảo
     if (!localStorage.getItem(STORAGE_KEYS.ROOMS)) {
-      var defaultRooms = [
-        {
-          code: '888888',
-          name: 'Kỳ Viện Hoàng Gia - Bàn Vip',
-          hostId: 'u_admin',
-          hostName: 'Admin Kiện Tướng',
-          hostElo: 2200,
-          hostAvatar: '♚',
-          betAmount: 50000,
-          timeControl: '15_0',
-          status: 'playing',
-          guestId: 'u_kythu1',
-          guestName: 'Kỳ Thủ Kỳ Cựu',
-          guestElo: 1850,
-          createdAt: new Date().toISOString()
-        },
-        {
-          code: '666666',
-          name: 'Phòng Thách Đấu - Nhận Kèo Trực Tiếp',
-          hostId: 'u_nguyenvana',
-          hostName: 'Nguyễn Văn A',
-          hostElo: 1350,
-          hostAvatar: '👤',
-          betAmount: 10000,
-          timeControl: '10_0',
-          status: 'waiting',
-          guestId: null,
-          guestName: null,
-          guestElo: null,
-          createdAt: new Date().toISOString()
-        },
-        {
-          code: '123456',
-          name: 'Giao Lưu Hữu Nghị - Không Cược',
-          hostId: 'u_tranvanb',
-          hostName: 'Trần Văn B',
-          hostElo: 1200,
-          hostAvatar: '♟',
-          betAmount: 0,
-          timeControl: '20_0',
-          status: 'waiting',
-          guestId: null,
-          guestName: null,
-          guestElo: null,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(defaultRooms));
+      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify([]));
     }
+
+    // Dọn dẹp phòng ảo cũ (nếu có từ phiên bản trước)
+    _purgeGhostRooms();
   }
 
   initDefaultData();
+
+  /**
+   * Dọn phòng ảo: xóa phòng giả từ phiên bản cũ (code cứng 888888, 666666, 123456)
+   * và xóa tất cả phòng không có kết nối P2P thật (quá 30 phút không hoạt động).
+   */
+  function _purgeGhostRooms() {
+    try {
+      var rooms = JSON.parse(localStorage.getItem(STORAGE_KEYS.ROOMS)) || [];
+      var ghostCodes = ['888888', '666666', '123456'];
+      var now = Date.now();
+      var MAX_AGE_MS = 30 * 60 * 1000; // 30 phút hết hạn
+
+      var cleaned = rooms.filter(function (r) {
+        // Xóa phòng ảo code cứng từ phiên bản cũ
+        if (ghostCodes.indexOf(r.code) !== -1) return false;
+        // Xóa phòng quá hạn (tạo hơn 30 phút mà vẫn "waiting" → không có ai kết nối thật)
+        var age = now - new Date(r.createdAt).getTime();
+        if (r.status === 'waiting' && age > MAX_AGE_MS) return false;
+        return true;
+      });
+
+      if (cleaned.length !== rooms.length) {
+        localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(cleaned));
+      }
+    } catch (e) { /* bỏ qua lỗi */ }
+  }
 
   function AppStorage() {}
 
@@ -499,6 +482,14 @@
   AppStorage.prototype.addOrUpdateRoom = function (roomData) {
     var rooms = this.getRooms();
     var idx = rooms.findIndex(function (r) { return r.code === roomData.code; });
+
+    // Bảo vệ: không cho phép tự gán đối thủ ảo khi tạo phòng mới
+    if (idx === -1 && roomData.status === 'waiting') {
+      roomData.guestId = null;
+      roomData.guestName = null;
+      roomData.guestElo = null;
+    }
+
     if (idx !== -1) {
       rooms[idx] = Object.assign({}, rooms[idx], roomData);
     } else {
@@ -531,6 +522,29 @@
       playingRooms: playingRooms,
       onlinePlayers: totalOnlinePlayers
     };
+  };
+
+  /**
+   * Dọn phòng hết hạn: gọi định kỳ để xóa phòng "waiting" quá 30 phút
+   * và phòng "playing" quá 2 giờ (phòng ma không ai đóng).
+   */
+  AppStorage.prototype.cleanupStaleRooms = function () {
+    var rooms = this.getRooms();
+    var now = Date.now();
+    var WAIT_MAX = 30 * 60 * 1000;   // 30 phút cho phòng chờ
+    var PLAY_MAX = 2 * 60 * 60 * 1000; // 2 giờ cho phòng đang đấu
+
+    var cleaned = rooms.filter(function (r) {
+      var age = now - new Date(r.createdAt).getTime();
+      if (r.status === 'waiting' && age > WAIT_MAX) return false;
+      if (r.status === 'playing' && age > PLAY_MAX) return false;
+      return true;
+    });
+
+    if (cleaned.length !== rooms.length) {
+      this.saveRooms(cleaned);
+    }
+    return cleaned;
   };
 
   return AppStorage;

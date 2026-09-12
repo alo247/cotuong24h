@@ -199,6 +199,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   /* ================= THỐNG KÊ BÀN ĐẤU & BROWSER PHÒNG ================= */
   function renderRoomStatsAndBrowser() {
+    // Dọn phòng hết hạn trước khi hiển thị
+    storage.cleanupStaleRooms();
+
     var stats = storage.getRoomStats();
     if (dom.statTotalRooms) dom.statTotalRooms.textContent = stats.totalRooms;
     if (dom.statWaitingRooms) dom.statWaitingRooms.textContent = stats.waitingRooms;
@@ -223,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (filtered.length === 0) {
-      dom.roomsBrowserGrid.innerHTML = '<div class="empty-rooms-msg">🎮 Không tìm thấy bàn chơi phù hợp. Bạn có thể tự bấm <strong>"Tạo Phòng Đặt Cược"</strong> để làm Chủ Bàn!</div>';
+      dom.roomsBrowserGrid.innerHTML = '<div class="empty-rooms-msg">🏟️ Hiện chưa có phòng chơi nào.<br>Bấm <strong>"Tạo Phòng Đặt Cược"</strong> để mở bàn đấu mới và chờ đối thủ thật kết nối!</div>';
       return;
     }
 
@@ -272,28 +275,47 @@ document.addEventListener('DOMContentLoaded', function () {
     dom.roomsBrowserGrid.innerHTML = html;
   }
 
-  // Global helper for card clicks
+  // Global helper for card clicks — chỉ join phòng thật qua P2P
   window.joinRoomByCode = function (roomCode) {
     if (!roomCode) return;
+
+    // Yêu cầu đăng nhập trước khi vào phòng
+    if (!currentUser) {
+      showToast('Vui lòng đăng nhập trước khi vào phòng!', 'error');
+      dom.modalAuth.classList.add('active');
+      return;
+    }
+
+    // Không cho tự vào phòng của chính mình
+    var rooms = storage.getRooms();
+    var targetRoom = rooms.find(function (r) { return r.code === roomCode; });
+    if (targetRoom && targetRoom.hostId === currentUser.id) {
+      showToast('Đây là phòng của bạn! Hãy chờ đối thủ kết nối.', 'error');
+      return;
+    }
+
+    showToast('Đang kết nối P2P tới phòng ' + roomCode + '...', 'info');
+
     p2p.joinRoom(roomCode, function (success) {
       if (success) {
-        showToast('Đã tham gia thành công phòng ' + roomCode + '!', 'info');
-        // Update room status in storage
-        var rooms = storage.getRooms();
-        var room = rooms.find(function (r) { return r.code === roomCode; });
-        if (room) {
-          room.status = 'playing';
-          if (currentUser) {
-            room.guestId = currentUser.id;
-            room.guestName = currentUser.displayName;
-            room.guestElo = currentUser.elo;
-          }
-          storage.addOrUpdateRoom(room);
+        showToast('Kết nối thành công! Đã vào phòng ' + roomCode, 'info');
+        // Cập nhật trạng thái phòng chỉ khi kết nối P2P thật sự thành công
+        if (targetRoom) {
+          targetRoom.status = 'playing';
+          targetRoom.guestId = currentUser.id;
+          targetRoom.guestName = currentUser.displayName;
+          targetRoom.guestElo = currentUser.elo;
+          storage.addOrUpdateRoom(targetRoom);
           renderRoomStatsAndBrowser();
         }
-        startNewGame('p2p', room ? room.betAmount : 0, 'black');
+        startNewGame('p2p', targetRoom ? targetRoom.betAmount : 0, 'black');
       } else {
-        showToast('Không thể kết nối đến phòng ' + roomCode + '. Phòng đã đóng hoặc mã không hợp lệ!', 'error');
+        // Kết nối P2P thất bại → xóa phòng ma khỏi danh sách
+        if (targetRoom) {
+          storage.removeRoom(roomCode);
+          renderRoomStatsAndBrowser();
+        }
+        showToast('Không thể kết nối đến phòng ' + roomCode + '. Phòng đã đóng hoặc chủ phòng đã offline!', 'error');
       }
     });
   };
@@ -836,11 +858,12 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     };
 
-    // Refresh Room List Button
+    // Refresh Room List Button — dọn phòng hết hạn + cập nhật
     if (dom.btnRefreshRooms) {
       dom.btnRefreshRooms.onclick = function () {
+        storage.cleanupStaleRooms();
         renderRoomStatsAndBrowser();
-        showToast('Đã cập nhật thống kê & danh sách phòng mới nhất!', 'info');
+        showToast('Đã dọn phòng hết hạn & cập nhật danh sách!', 'info');
       };
     }
 
@@ -867,6 +890,12 @@ document.addEventListener('DOMContentLoaded', function () {
         renderRoomStatsAndBrowser();
       }
     });
+
+    // Tự động dọn phòng hết hạn mỗi 60 giây
+    setInterval(function () {
+      storage.cleanupStaleRooms();
+      renderRoomStatsAndBrowser();
+    }, 60000);
 
     // Join Room
     var btnJoinRoom = document.getElementById('btnJoinRoom');
