@@ -43,7 +43,7 @@
           losses: 5,
           draws: 2,
           role: 'admin',
-          status: 'online',
+          status: 'offline',
           isBanned: false,
           createdAt: new Date().toISOString()
         },
@@ -59,7 +59,7 @@
           losses: 35,
           draws: 15,
           role: 'user',
-          status: 'online',
+          status: 'offline',
           isBanned: false,
           createdAt: new Date().toISOString()
         },
@@ -75,7 +75,7 @@
           losses: 18,
           draws: 5,
           role: 'user',
-          status: 'online',
+          status: 'offline',
           isBanned: false,
           createdAt: new Date().toISOString()
         },
@@ -97,6 +97,24 @@
         }
       ];
       localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(defaultUsers));
+    } else {
+      // Đảm bảo các tài khoản mẫu cũ trong localStorage không bị treo online
+      try {
+        var existingUsers = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+        var sampleIds = ['u_admin', 'u_kythu1', 'u_nguyenvana', 'u_tranthib'];
+        var currentU = JSON.parse(localStorage.getItem(STORAGE_KEYS.CURRENT_USER));
+        var currentId = currentU ? currentU.id : null;
+        var modified = false;
+        existingUsers.forEach(function (u) {
+          if (sampleIds.indexOf(u.id) !== -1 && u.id !== currentId && u.status === 'online') {
+            u.status = 'offline';
+            modified = true;
+          }
+        });
+        if (modified) {
+          localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(existingUsers));
+        }
+      } catch (e) {}
     }
 
     if (!localStorage.getItem(STORAGE_KEYS.TRANSACTIONS)) {

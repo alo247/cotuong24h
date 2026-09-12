@@ -447,7 +447,12 @@ document.addEventListener('DOMContentLoaded', function () {
           storage.addOrUpdateRoom(targetRoom);
           renderRoomStatsAndBrowser();
         }
-        startNewGame('p2p', targetRoom ? targetRoom.betAmount : 0, 'black');
+        startNewGame('p2p', targetRoom ? targetRoom.betAmount : 0, 'black', false);
+        if (targetRoom) {
+          dom.nameRed.textContent = targetRoom.hostName || 'Chủ Bàn (Đỏ)';
+          dom.eloRed.textContent = 'ELO: ' + (targetRoom.hostElo || 1200);
+          dom.avatarRed.textContent = targetRoom.hostAvatar || '🐉';
+        }
         if (currentUser) {
           p2p.send({
             type: 'PLAYER_INFO',
@@ -545,7 +550,12 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function onSquareClick(e) {
-    if (!isGameStarted) return;
+    if (!isGameStarted) {
+      if (gameMode === 'p2p') {
+        showToast('Đang chờ đối thủ vào bàn thi đấu! Vui lòng chia sẻ mã phòng.', 'info');
+      }
+      return;
+    }
 
     var square = e.currentTarget;
     var r = parseInt(square.dataset.row, 10);
@@ -642,7 +652,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  function startNewGame(mode, bet, color) {
+  function startNewGame(mode, bet, color, isWaiting) {
     gameMode = mode;
     betAmount = bet || 0;
     myColor = color || 'red';
@@ -651,33 +661,67 @@ document.addEventListener('DOMContentLoaded', function () {
     validMoves = [];
     lastMove = null;
     isFlipped = (myColor === 'black');
-    isGameStarted = true;
     dom.movesLog.innerHTML = '';
     dom.chatLog.innerHTML = '';
-    dom.lblRoomBet.textContent = 'Cược: ' + betAmount.toLocaleString('vi-VN') + ' Xu';
+    dom.lblRoomBet.textContent = 'Cược: ' + (betAmount > 0 ? betAmount.toLocaleString('vi-VN') + ' Xu' : 'Tự do');
 
     timerRed = timeControl;
     timerBlack = timeControl;
     updateTimerDisplay();
-    startTimer();
 
-    // Thiết lập thông tin kỳ thủ
-    if (mode === 'ai') {
-      var diffNames = { 1: 'Tập chơi', 2: 'Trung bình', 3: 'Khá', 4: 'Kiện tướng' };
-      dom.nameRed.textContent = currentUser ? currentUser.displayName : 'Bạn (Đỏ)';
-      dom.nameBlack.textContent = 'Máy AI - ' + (diffNames[aiDifficulty] || 'Trung bình');
+    if (mode === 'p2p' && isWaiting) {
+      // TRẠNG THÁI CHỜ ĐỐI THỦ THẬT: TUYỆT ĐỐI KHÔNG CÓ ĐỐI THỦ ẢO
+      isGameStarted = false;
+      stopTimer();
+
+      // Thẻ Chủ Bàn (Đỏ)
+      dom.nameRed.textContent = currentUser ? currentUser.displayName : 'Chủ Bàn (Đỏ)';
       dom.eloRed.textContent = 'ELO: ' + (currentUser ? currentUser.elo : 1200);
-      dom.eloBlack.textContent = 'ELO: ' + (1200 + aiDifficulty * 200);
-    } else if (mode === 'passplay') {
-      dom.nameRed.textContent = 'Người chơi 1 (Đỏ)';
-      dom.nameBlack.textContent = 'Người chơi 2 (Đen)';
-      dom.eloRed.textContent = '';
-      dom.eloBlack.textContent = '';
-    } else if (mode === 'p2p') {
-      dom.nameRed.textContent = (myColor === 'red' && currentUser) ? currentUser.displayName : 'Đối thủ (Đỏ)';
-      dom.nameBlack.textContent = (myColor === 'black' && currentUser) ? currentUser.displayName : 'Đối thủ (Đen)';
-      dom.eloRed.textContent = 'ELO: ' + (currentUser ? currentUser.elo : 1200);
-      dom.eloBlack.textContent = 'ELO: 1200';
+      dom.avatarRed.textContent = (currentUser && currentUser.avatar) ? currentUser.avatar : '🐉';
+      dom.timerRed.textContent = Math.floor(timeControl / 60) + ':00';
+
+      // Thẻ Đối Thủ: HIỂN THỊ CHỜ ĐỐI THỦ KẾT NỐI - KHÔNG TẠO ĐỐI THỦ ẢO
+      dom.nameBlack.textContent = '⏳ Đang chờ đối thủ vào bàn...';
+      dom.eloBlack.textContent = 'Chưa có người chơi';
+      dom.avatarBlack.textContent = '⏳';
+      dom.timerBlack.textContent = '--:--';
+    } else {
+      isGameStarted = true;
+      startTimer();
+
+      // Thiết lập thông tin kỳ thủ
+      if (mode === 'ai') {
+        var diffNames = { 1: 'Tập chơi', 2: 'Trung bình', 3: 'Khá', 4: 'Kiện tướng' };
+        dom.nameRed.textContent = currentUser ? currentUser.displayName : 'Bạn (Đỏ)';
+        dom.nameBlack.textContent = 'Máy AI - ' + (diffNames[aiDifficulty] || 'Trung bình');
+        dom.eloRed.textContent = 'ELO: ' + (currentUser ? currentUser.elo : 1200);
+        dom.eloBlack.textContent = 'ELO: ' + (1200 + aiDifficulty * 200);
+        dom.avatarRed.textContent = (currentUser && currentUser.avatar) ? currentUser.avatar : '🐉';
+        dom.avatarBlack.textContent = '🤖';
+      } else if (mode === 'passplay') {
+        dom.nameRed.textContent = 'Người chơi 1 (Đỏ)';
+        dom.nameBlack.textContent = 'Người chơi 2 (Đen)';
+        dom.eloRed.textContent = '';
+        dom.eloBlack.textContent = '';
+        dom.avatarRed.textContent = '🐉';
+        dom.avatarBlack.textContent = '🐯';
+      } else if (mode === 'p2p') {
+        if (myColor === 'red') {
+          dom.nameRed.textContent = currentUser ? currentUser.displayName : 'Bạn (Đỏ)';
+          dom.eloRed.textContent = 'ELO: ' + (currentUser ? currentUser.elo : 1200);
+          dom.avatarRed.textContent = (currentUser && currentUser.avatar) ? currentUser.avatar : '🐉';
+          dom.nameBlack.textContent = 'Đối thủ (Đen)';
+          dom.eloBlack.textContent = 'Đang nhận thông tin...';
+          dom.avatarBlack.textContent = '👤';
+        } else {
+          dom.nameBlack.textContent = currentUser ? currentUser.displayName : 'Bạn (Đen)';
+          dom.eloBlack.textContent = 'ELO: ' + (currentUser ? currentUser.elo : 1200);
+          dom.avatarBlack.textContent = (currentUser && currentUser.avatar) ? currentUser.avatar : '🐯';
+          dom.nameRed.textContent = 'Chủ Bàn (Đỏ)';
+          dom.eloRed.textContent = 'Đang nhận thông tin...';
+          dom.avatarRed.textContent = '👤';
+        }
+      }
     }
 
     switchView('Game');
@@ -1003,7 +1047,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Vào thẳng bàn cờ và hiển thị mã phòng ngay trong khung chat của phòng chờ
         switchView('Game');
-        startNewGame('p2p', bet, 'red');
+        startNewGame('p2p', bet, 'red', true); // isWaiting = true: Chờ đối thủ thật, KHÔNG tạo đối thủ ảo
         dom.lblRoomBet.textContent = 'Cược: ' + (bet > 0 ? bet.toLocaleString('vi-VN') + ' Xu' : 'Tự do') + ' | Mã: ' + code;
         appendSystemRoomNotice(code, roomName, bet, timeControl);
         showToast('Đã tạo bàn cờ! Mã phòng đã hiển thị trong khung chat bên phải.', 'info');
@@ -1361,8 +1405,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // === P2P Event Listeners ===
     p2p.on('player_joined', function () {
-      // Đối thủ thật kết nối vào phòng của Host
-      startNewGame('p2p', betAmount, 'red');
+      // Đối thủ thật kết nối vào phòng của Host: Khởi động ván đấu thật
+      startNewGame('p2p', betAmount, 'red', false);
 
       // Gửi thông tin ván cược và người chơi cho khách
       p2p.send({
